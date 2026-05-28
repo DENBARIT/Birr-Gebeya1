@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/design_system.dart';
+import '../widgets/brand_logo.dart';
 import 'phone_auth_screen.dart';
 
 class SplashScreen extends StatelessWidget {
@@ -12,22 +13,39 @@ class SplashScreen extends StatelessWidget {
       body: SafeArea(
         child: Stack(
           children: [
-            // Atmospheric subtle tonal gradient in background
             Positioned(
-              top: -150,
-              left: 0,
-              right: 0,
+              top: -120,
+              left: -90,
               child: Container(
-                height: 350,
+                width: 220,
+                height: 220,
                 decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment.topCenter,
-                    radius: 0.8,
-                    colors: [
-                      const Color(0xFFA0F3D4).withValues(alpha: 0.35),
-                      Colors.transparent,
-                    ],
-                  ),
+                  shape: BoxShape.circle,
+                  color: BirrTheme.primary.withValues(alpha: 0.08),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 70,
+              right: -70,
+              child: Container(
+                width: 170,
+                height: 170,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: BirrTheme.secondaryContainer.withValues(alpha: 0.18),
+                ),
+              ),
+            ),
+            Positioned(
+              bottom: 110,
+              left: -80,
+              child: Container(
+                width: 190,
+                height: 190,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: BirrTheme.primaryContainer.withValues(alpha: 0.06),
                 ),
               ),
             ),
@@ -46,56 +64,7 @@ class SplashScreen extends StatelessWidget {
                   Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Outer decorative ring
-                          Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: BirrTheme.primaryContainer.withValues(
-                                  alpha: 0.12,
-                                ),
-                                width: 1.5,
-                              ),
-                            ),
-                          ),
-                          // Inner card
-                          Container(
-                            width: 96,
-                            height: 96,
-                            decoration: BoxDecoration(
-                              color: BirrTheme.primaryContainer,
-                              borderRadius: BorderRadius.circular(16.0),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: BirrTheme.primaryContainer.withValues(
-                                    alpha: 0.2,
-                                  ),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: const Icon(
-                              Icons.account_balance,
-                              color: Colors.white,
-                              size: 48,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 24.0),
-                      Text(
-                        'ብር Gebeya',
-                        style: BirrTheme.getHeadlineLgMobile(context).copyWith(
-                          color: BirrTheme.primary,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
+                      const BrandLogo(size: 172),
                       const SizedBox(height: 8.0),
                       Text(
                         'Grow your money with Ethiopian Treasury Bills',
@@ -113,39 +82,63 @@ class SplashScreen extends StatelessWidget {
                   // Middle section image simulation placeholder
                   Container(
                     width: double.infinity,
-                    height: 170,
+                    height: 200,
                     decoration: BoxDecoration(
-                      color: BirrTheme.surfaceContainerLow,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: BirrTheme.outlineVariant),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [Colors.white, BirrTheme.surfaceContainerLow],
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: BirrTheme.outlineVariant.withValues(alpha: 0.7),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: BirrTheme.primary.withValues(alpha: 0.08),
+                          blurRadius: 24,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Stack(
                       children: [
-                        // Soft green abstract dashboard display
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  BirrTheme.primary.withValues(alpha: 0.05),
-                                  BirrTheme.secondary.withValues(alpha: 0.05),
-                                ],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
+                        Positioned(
+                          top: -60,
+                          left: -40,
+                          child: _GlowOrb(
+                            size: 150,
+                            color: BirrTheme.primary.withValues(alpha: 0.08),
+                          ),
+                        ),
+                        Positioned(
+                          bottom: -50,
+                          right: -30,
+                          child: _GlowOrb(
+                            size: 130,
+                            color: BirrTheme.secondaryContainer.withValues(
+                              alpha: 0.16,
                             ),
                           ),
                         ),
-                        // Inner chart mock design graphics
                         Center(
-                          child: Icon(
-                            Icons.trending_up,
-                            size: 64,
-                            color: BirrTheme.primary.withValues(alpha: 0.3),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const BrandLogo(size: 92, showLabel: false),
+                              const SizedBox(height: 10),
+                              Text(
+                                'A warmer way to grow savings',
+                                style: BirrTheme.getHeadlineMdMobile(context)
+                                    .copyWith(
+                                      color: BirrTheme.primary,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                              ),
+                            ],
                           ),
                         ),
-                        // Title/Labels inside visual container
                         Positioned(
                           bottom: 12,
                           left: 12,
@@ -210,11 +203,12 @@ class SplashScreen extends StatelessWidget {
                       // Secondary Navigation Action
                       TextButton(
                         onPressed: () {
-                          // For prototype convenience, let's also bypass directly to the login flow
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => const PhoneAuthScreen(),
+                              builder: (context) => const PhoneAuthScreen(
+                                initialAction: AuthAction.signIn,
+                              ),
                             ),
                           );
                         },
@@ -222,7 +216,7 @@ class SplashScreen extends StatelessWidget {
                           foregroundColor: BirrTheme.primary,
                         ),
                         child: Text(
-                          'I already have an account',
+                          'Already have an account? Sign in',
                           style: BirrTheme.getBodyLg(context).copyWith(
                             color: BirrTheme.primary,
                             fontWeight: FontWeight.w600,
@@ -255,6 +249,26 @@ class SplashScreen extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _GlowOrb extends StatelessWidget {
+  final double size;
+  final Color color;
+
+  const _GlowOrb({required this.size, required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+        boxShadow: [BoxShadow(color: color, blurRadius: 28, spreadRadius: 6)],
       ),
     );
   }
