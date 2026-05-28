@@ -2,11 +2,14 @@ import 'dart:io';
 
 import 'package:postgres/postgres.dart';
 
+/// Applies migrations/001_create_profiles.sql to the Supabase database.
+///
+/// Connects through the IPv4 session pooler using an Endpoint (rather than a
+/// URL) so the password is passed verbatim and never mangled by URL parsing.
 Future<void> main(List<String> args) async {
-  final databaseUrl = _readEnvValue('DATABASE_URL');
-
-  if (databaseUrl == null || databaseUrl.isEmpty) {
-    stderr.writeln('DATABASE_URL is missing. Set it in .env before running.');
+  final password = _readEnvValue('DB_PASSWORD');
+  if (password == null || password.isEmpty) {
+    stderr.writeln('DB_PASSWORD is missing. Set it in .env before running.');
     exitCode = 1;
     return;
   }
@@ -19,7 +22,19 @@ Future<void> main(List<String> args) async {
   }
 
   final migrationSql = migrationFile.readAsStringSync();
-  final connection = await Connection.openFromUrl(databaseUrl);
+  final connection = await Connection.open(
+    Endpoint(
+      host: 'aws-1-eu-central-2.pooler.supabase.com',
+      port: 5432,
+      database: 'postgres',
+      username: 'postgres.clcnvcfahmvaontnnpfc',
+      password: password,
+    ),
+    settings: ConnectionSettings(
+      sslMode: SslMode.require,
+      connectTimeout: const Duration(seconds: 15),
+    ),
+  );
 
   try {
     print('Connected to PostgreSQL successfully.');

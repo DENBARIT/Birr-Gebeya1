@@ -1,7 +1,7 @@
 CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS public.profiles (
-  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   username text NOT NULL,
   full_name text,
   telebirr_number text,
@@ -18,8 +18,17 @@ CREATE UNIQUE INDEX IF NOT EXISTS profiles_phone_number_key
   ON public.profiles (phone_number)
   WHERE phone_number IS NOT NULL;
 
-INSERT INTO public.profiles (id, username, full_name, telebirr_number, email, phone_number)
-VALUES
-  ('00000000-0000-0000-0000-000000000001', 'alice', 'Alice Demo', '+251912345678', 'alice@example.com', '+251912345678'),
-  ('00000000-0000-0000-0000-000000000002', 'bob', 'Bob Demo', '+251923456789', 'bob@example.com', '+251923456789')
-ON CONFLICT (id) DO NOTHING;
+-- Row Level Security: each authenticated user may only read/write their own row
+ALTER TABLE public.profiles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "own profile select" ON public.profiles;
+CREATE POLICY "own profile select" ON public.profiles
+  FOR SELECT USING (auth.uid() = id);
+
+DROP POLICY IF EXISTS "own profile insert" ON public.profiles;
+CREATE POLICY "own profile insert" ON public.profiles
+  FOR INSERT WITH CHECK (auth.uid() = id);
+
+DROP POLICY IF EXISTS "own profile update" ON public.profiles;
+CREATE POLICY "own profile update" ON public.profiles
+  FOR UPDATE USING (auth.uid() = id) WITH CHECK (auth.uid() = id);
