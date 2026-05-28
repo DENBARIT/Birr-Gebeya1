@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Notifications - ብር Gebeya</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#84d6b9",
+                        "tertiary-fixed": "#ffdad4",
+                        "surface-container": "#ebefeb",
+                        "on-primary-container": "#9aedcf",
+                        "surface-container-low": "#f1f4f1",
+                        "secondary-fixed": "#ffdcbb",
+                        "on-primary-fixed-variant": "#00513e",
+                        "on-tertiary-fixed-variant": "#743329",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e3e0",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eef2ee",
+                        "outline": "#6f7a74",
+                        "primary": "#005440",
+                        "surface-variant": "#e0e3e0",
+                        "inverse-primary": "#84d6b9",
+                        "surface-dim": "#d7dbd7",
+                        "surface-tint": "#086b53",
+                        "primary-container": "#0f6e56",
+                        "on-secondary-fixed": "#2b1700",
+                        "surface-container-high": "#e5e9e5",
+                        "on-tertiary-fixed": "#3b0804",
+                        "tertiary-container": "#954c41",
+                        "tertiary": "#78352b",
+                        "secondary": "#885200",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#673d00",
+                        "on-surface": "#181d1a",
+                        "on-secondary-container": "#704200",
+                        "on-primary-fixed": "#002117",
+                        "surface": "#f7faf6",
+                        "inverse-surface": "#2d312f",
+                        "outline-variant": "#bec9c3",
+                        "background": "#f7faf6",
+                        "secondary-fixed-dim": "#ffb869",
+                        "surface-bright": "#f7faf6",
+                        "primary-fixed": "#a0f3d4",
+                        "secondary-container": "#fdad4e",
+                        "on-background": "#181d1a",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#ffd3cc",
+                        "on-surface-variant": "#3f4944",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb4a8",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "base-unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "display-currency": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "display-currency": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #F8F7F2;
+            width: 390px;
+            margin: 0 auto;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 50px rgba(0,0,0,0.05);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .notification-card {
+            transition: background-color 0.2s ease;
+        }
+        .notification-card:active {
+            background-color: #f1f4f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #E8E7E0;
+            border-radius: 10px;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-body-md text-on-surface selection:bg-primary-fixed selection:text-on-primary-fixed">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center w-full px-container-margin py-stack-sm sticky top-0 z-50 bg-surface dark:bg-surface-dim">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full overflow-hidden border border-outline-variant bg-surface-container">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional studio headshot of a young Ethiopian business professional against a soft, neutral beige background. The lighting is warm and directional, emphasizing stability and institutional trust. The individual has a confident, approachable expression, dressed in modern corporate attire that reflects a minimalist yet premium aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5NggvJ37MVDM6sAsZwjolXjFNjcCueARKzSe-naEcdVyTkbl4JeBdsTsEno8TMwXu0clqrebURz0MXrR8E6jDI2S_bRiR7yVm5DG0rOz5sWP6ozOZoSzNdapRS7JULPCgGiYi04rmH5U1r-5JxSRFT-3Hg1OGHjnYvVLo6zqHX2DQlp8bMjfXfh7r-BbM-BNabi7fNVRaHMFvrbS7sg47Tv1Y8ipNc3Xj7_KypZrIzKui4t4OX2EzXlcfD948uhDamxFYkcP2yA"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary dark:text-primary-fixed-dim">ብር Gebeya</h1>
+</div>
+<button class="font-label-bold text-label-bold text-primary dark:text-primary-fixed-dim px-3 py-1.5 rounded-lg border border-primary/20 bg-primary/5 hover:bg-primary/10 transition-colors">
+            አማርኛ
+        </button>
+</header>
+<!-- Main Canvas -->
+<main class="flex-grow px-container-margin py-stack-lg space-y-stack-lg custom-scrollbar overflow-y-auto pb-32">
+<!-- Screen Title Section -->
+<section class="flex flex-col gap-base-unit">
+<h2 class="font-headline-md-mobile text-headline-md-mobile text-primary">Notifications</h2>
+<p class="font-label-md text-label-md text-on-surface-variant">Stay updated with your investment activities</p>
+</section>
+<!-- Notification List -->
+<div class="space-y-stack-md">
+<!-- Item 1: Confirmed -->
+<div class="notification-card bg-surface p-stack-md rounded-xl border border-[#E8E7E0] flex gap-stack-md group cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<div class="flex justify-between items-start">
+<span class="font-label-bold text-label-bold text-primary">INVESTMENT CONFIRMED</span>
+<span class="font-label-md text-label-md text-on-surface-variant">2h ago</span>
+</div>
+<p class="font-body-md text-on-surface leading-tight">ETB 1,000 in <span class="font-semibold text-primary">28-Day T-Bill</span> pool has been successfully allocated.</p>
+</div>
+</div>
+<!-- Item 2: Pool Alert -->
+<div class="notification-card bg-surface p-stack-md rounded-xl border border-secondary/20 flex gap-stack-md relative overflow-hidden group cursor-pointer">
+<div class="absolute left-0 top-0 bottom-0 w-1 bg-secondary"></div>
+<div class="w-12 h-12 rounded-full bg-secondary/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">notifications_active</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<div class="flex justify-between items-start">
+<span class="font-label-bold text-label-bold text-secondary">POOL ALERT</span>
+<span class="font-label-md text-label-md text-on-surface-variant">5h ago</span>
+</div>
+<p class="font-body-md text-on-surface leading-tight">Investment pool is <span class="font-semibold">90% full</span>. Act now to secure your spot in this high-yield window.</p>
+<div class="mt-2 w-full bg-secondary/10 h-1.5 rounded-full overflow-hidden">
+<div class="bg-secondary h-full rounded-full w-[90%]"></div>
+</div>
+</div>
+</div>
+<!-- Item 3: Payout -->
+<div class="notification-card bg-surface p-stack-md rounded-xl border border-[#E8E7E0] flex gap-stack-md group cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-tertiary-fixed/40 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">payments</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<div class="flex justify-between items-start">
+<span class="font-label-bold text-label-bold text-tertiary">PAYOUT RECEIVED</span>
+<span class="font-label-md text-label-md text-on-surface-variant">1d ago</span>
+</div>
+<p class="font-body-md text-on-surface leading-tight">ETB 1,023 has been credited to your <span class="font-semibold">Telebirr</span> account from matured T-Bills.</p>
+</div>
+</div>
+<!-- Item 4: Maturity Warning -->
+<div class="notification-card bg-surface-container-low p-stack-md rounded-xl border border-[#E8E7E0] flex gap-stack-md group cursor-pointer">
+<div class="w-12 h-12 rounded-full bg-on-surface-variant/10 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-on-surface-variant" style="font-variation-settings: 'FILL' 0;">schedule</span>
+</div>
+<div class="flex flex-col gap-1 w-full">
+<div class="flex justify-between items-start">
+<span class="font-label-bold text-label-bold text-on-surface-variant">UPCOMING MATURITY</span>
+<span class="font-label-md text-label-md text-on-surface-variant">1d ago</span>
+</div>
+<p class="font-body-md text-on-surface leading-tight">Your 28-Day T-Bill investment matures in <span class="font-semibold">3 days</span>. Set your reinvestment preference now.</p>
+</div>
+</div>
+</div>
+<!-- Optional Illustration for Visual Interest -->
+<div class="mt-stack-lg rounded-xl overflow-hidden border border-outline-variant/30 h-32 relative bg-surface-container">
+<img class="w-full h-full object-cover opacity-80" data-alt="A clean, minimalist digital landscape representing the Ethiopian highlands with stylized geometric forms. The color palette consists of primary deep green and subtle ochre accents, under a clear morning sky. Overlaid are thin, glowing data lines representing financial growth and stability. The overall mood is peaceful, secure, and modern, reflecting institutional trust." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVIhP0K-1O6F3_lDdvhWVUdpggeBjpmA_eOBE6U1ZZ6gjyCI3I2x8j3gAhZB6_xh5BA4vOlnZ-qE4Wh3whgimIxxpcmA18-GS3qPH3zI3b3ojAliKMptQNnOwnWfmhDST4PcOXVZo9-Ftm2THCp7mm1dIEDzExPPKcve_HF77Hv9hKHMrGPwrYDfWw9Lx96NGGJGIo4FNPJsB0zdriqHXKE4xGk814hxYEk514IMEZYbtp6U0Z4aawNChLZZ7dcsLZHEzxakez6g"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface via-transparent to-transparent flex items-end p-4">
+<p class="font-label-bold text-label-bold text-primary uppercase tracking-widest">Growth in Motion</p>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface dark:bg-surface-dim border-t border-outline-variant dark:border-outline">
+<!-- Home -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-bold text-label-bold mt-0.5">Home</span>
+</a>
+<!-- Invest -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-bold text-label-bold mt-0.5">Invest</span>
+</a>
+<!-- Portfolio -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="pie_chart">pie_chart</span>
+<span class="font-label-bold text-label-bold mt-0.5">Portfolio</span>
+</a>
+<!-- Alerts (ACTIVE) -->
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-xl px-3 py-1 transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="notifications" style="font-variation-settings: 'FILL' 1;">notifications</span>
+<span class="font-label-bold text-label-bold mt-0.5">Alerts</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant transition-all duration-150 active:scale-90" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-bold text-label-bold mt-0.5">Profile</span>
+</a>
+</nav>
+<script>
+        // Micro-interactions for the notification items
+        document.querySelectorAll('.notification-card').forEach(card => {
+            card.addEventListener('click', () => {
+                // Flash effect
+                card.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    card.style.transform = 'scale(1)';
+                }, 100);
+            });
+        });
+
+        // Pull-to-refresh simulation logic could go here
+        console.log("ብር Gebeya Notifications UI Loaded");
+    </script>
+</body></html>

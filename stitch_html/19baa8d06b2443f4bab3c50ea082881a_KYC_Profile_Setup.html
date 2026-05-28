@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=390px, initial-scale=1.0" name="viewport"/>
+<title>KYC Profile - ብር Gebeya</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#84d6b9",
+                        "tertiary-fixed": "#ffdad4",
+                        "surface-container": "#ebefeb",
+                        "on-primary-container": "#9aedcf",
+                        "surface-container-low": "#f1f4f1",
+                        "secondary-fixed": "#ffdcbb",
+                        "on-primary-fixed-variant": "#00513e",
+                        "on-tertiary-fixed-variant": "#743329",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e3e0",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eef2ee",
+                        "outline": "#6f7a74",
+                        "primary": "#005440",
+                        "surface-variant": "#e0e3e0",
+                        "inverse-primary": "#84d6b9",
+                        "surface-dim": "#d7dbd7",
+                        "surface-tint": "#086b53",
+                        "primary-container": "#0f6e56",
+                        "on-secondary-fixed": "#2b1700",
+                        "surface-container-high": "#e5e9e5",
+                        "on-tertiary-fixed": "#3b0804",
+                        "tertiary-container": "#954c41",
+                        "tertiary": "#78352b",
+                        "secondary": "#885200",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#673d00",
+                        "on-surface": "#181d1a",
+                        "on-secondary-container": "#704200",
+                        "on-primary-fixed": "#002117",
+                        "surface": "#f7faf6",
+                        "inverse-surface": "#2d312f",
+                        "outline-variant": "#bec9c3",
+                        "background": "#f7faf6",
+                        "secondary-fixed-dim": "#ffb869",
+                        "surface-bright": "#f7faf6",
+                        "primary-fixed": "#a0f3d4",
+                        "secondary-container": "#fdad4e",
+                        "on-background": "#181d1a",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#ffd3cc",
+                        "on-surface-variant": "#3f4944",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb4a8",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "base-unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "display-currency": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "display-currency": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #f7faf6;
+            width: 390px;
+            margin: 0 auto;
+            min-height: 100vh;
+            position: relative;
+            box-shadow: 0 0 50px rgba(0,0,0,0.05);
+            overflow-x: hidden;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: #005440 !important;
+            box-shadow: 0 0 0 1px #005440;
+        }
+        .custom-radio:checked {
+            background-color: #005440;
+            border-color: #005440;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col font-body-md text-on-surface">
+<!-- Top Navigation Anchor (As per Shared Components JSON logic) -->
+<!-- Suppressing BottomNavBar because this is a focused Transactional/Onboarding task -->
+<header class="flex justify-between items-center w-full px-container-margin py-stack-sm sticky top-0 z-50 bg-surface">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[24px]">arrow_back</span>
+<span class="font-headline-md-mobile text-headline-md-mobile font-bold text-primary">ብር Gebeya</span>
+</div>
+<button class="font-label-bold text-label-bold text-primary hover:bg-surface-container-low px-3 py-1 rounded-lg transition-all">አማርኛ</button>
+</header>
+<main class="flex-1 px-container-margin pt-stack-lg pb-32">
+<!-- Progress Indicator -->
+<div class="mb-stack-lg">
+<div class="flex justify-between items-end mb-2">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface">Complete your profile</h1>
+<span class="font-label-bold text-label-bold text-outline">Step 1 of 2</span>
+</div>
+<!-- Progress Bar -->
+<div class="w-full h-1.5 bg-primary/10 rounded-full overflow-hidden">
+<div class="w-1/2 h-full bg-primary transition-all duration-500 ease-out"></div>
+</div>
+</div>
+<p class="font-body-md text-on-surface-variant mb-stack-lg">Please provide your legal information as it appears on your National ID to verify your investment account.</p>
+<!-- Form Fields -->
+<div class="space-y-stack-md">
+<!-- Full Name -->
+<div class="space-y-1.5">
+<label class="font-label-bold text-label-bold text-on-surface-variant ml-1">Full Name</label>
+<div class="relative">
+<input class="w-full bg-white border border-[#D1D1CB] rounded-xl px-4 py-3 text-body-md placeholder:text-outline-variant transition-colors" placeholder="Enter your full name" type="text"/>
+</div>
+</div>
+<!-- National ID -->
+<div class="space-y-1.5">
+<label class="font-label-bold text-label-bold text-on-surface-variant ml-1">National ID Number</label>
+<input class="w-full bg-white border border-[#D1D1CB] rounded-xl px-4 py-3 text-body-md placeholder:text-outline-variant transition-colors" placeholder="e.g. 1234567890" type="text"/>
+</div>
+<!-- Date of Birth & Gender Grid -->
+<div class="grid grid-cols-1 gap-stack-md">
+<!-- DOB -->
+<div class="space-y-1.5">
+<label class="font-label-bold text-label-bold text-on-surface-variant ml-1">Date of Birth</label>
+<div class="relative">
+<input class="w-full bg-white border border-[#D1D1CB] rounded-xl px-4 py-3 text-body-md text-on-surface appearance-none transition-colors" type="date"/>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">calendar_today</span>
+</div>
+</div>
+<!-- Gender -->
+<div class="space-y-1.5">
+<label class="font-label-bold text-label-bold text-on-surface-variant ml-1">Gender</label>
+<div class="flex gap-stack-md">
+<label class="flex-1 flex items-center justify-center gap-2 border border-[#D1D1CB] bg-white p-3 rounded-xl cursor-pointer transition-all hover:bg-surface-container-low has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+<input class="custom-radio w-4 h-4 text-primary border-outline-variant focus:ring-primary" name="gender" type="radio" value="male"/>
+<span class="font-body-md text-on-surface">Male</span>
+</label>
+<label class="flex-1 flex items-center justify-center gap-2 border border-[#D1D1CB] bg-white p-3 rounded-xl cursor-pointer transition-all hover:bg-surface-container-low has-[:checked]:border-primary has-[:checked]:bg-primary/5">
+<input class="custom-radio w-4 h-4 text-primary border-outline-variant focus:ring-primary" name="gender" type="radio" value="female"/>
+<span class="font-body-md text-on-surface">Female</span>
+</label>
+</div>
+</div>
+</div>
+<!-- City Dropdown -->
+<div class="space-y-1.5">
+<label class="font-label-bold text-label-bold text-on-surface-variant ml-1">City</label>
+<div class="relative">
+<select class="w-full bg-white border border-[#D1D1CB] rounded-xl px-4 py-3 text-body-md text-on-surface appearance-none transition-colors pr-10">
+<option disabled="" selected="" value="">Select your city</option>
+<option value="addis-ababa">Addis Ababa</option>
+<option value="dire-dawa">Dire Dawa</option>
+<option value="adama">Adama</option>
+<option value="bahir-dar">Bahir Dar</option>
+<option value="hawassa">Hawassa</option>
+<option value="mekele">Mekele</option>
+</select>
+<span class="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-outline pointer-events-none">expand_more</span>
+</div>
+</div>
+</div>
+<!-- Trust Indicator -->
+<div class="mt-stack-lg p-4 bg-surface-container-low rounded-xl flex gap-3 items-start border border-[#E8E7E0]">
+<span class="material-symbols-outlined text-primary text-[20px]">verified_user</span>
+<p class="text-[11px] leading-relaxed text-on-surface-variant">Your data is encrypted and processed in compliance with Ethiopian financial data protection regulations. We do not share your private identity with third parties.</p>
+</div>
+</main>
+<!-- Bottom Action Area -->
+<div class="fixed bottom-0 left-0 w-[390px] bg-white p-container-margin pb-10 shadow-[0_-4px_16px_rgba(0,0,0,0.04)] border-t border-[#E8E7E0] z-40">
+<button class="w-full bg-primary hover:bg-primary-container text-white py-4 rounded-xl font-headline-md-mobile text-headline-md-mobile transition-all active:scale-95 flex items-center justify-center gap-2">
+            Continue
+            <span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</div>
+<!-- Background Decoration for Brand Identity -->
+<div class="fixed -top-20 -right-20 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<div class="fixed bottom-40 -left-20 w-48 h-48 bg-secondary-container/5 rounded-full blur-3xl pointer-events-none -z-10"></div>
+<script>
+        // Simple micro-interaction for form inputs
+        const inputs = document.querySelectorAll('input, select');
+        inputs.forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.classList.add('scale-[1.01]');
+            });
+            input.addEventListener('blur', () => {
+                input.parentElement.classList.remove('scale-[1.01]');
+            });
+        });
+
+        // Date picker auto-formatting or interaction logic could go here
+    </script>
+</body></html>
