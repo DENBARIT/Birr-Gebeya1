@@ -278,5 +278,18 @@ class AppState extends ChangeNotifier {
     avatarValue = avatarValueValue;
     profile = UserProfile(email: email, phoneNumber: phoneNumber);
     notifyListeners();
+
+    // Persist to Supabase when a session exists (no-op if not signed in).
+    try {
+      await SupabaseAppRepository().saveProfile(
+        userName: userName,
+        fullName: fullName,
+        telebirrNumber: telebirrNumber,
+        email: email,
+        phoneNumber: phoneNumber,
+      );
+    } catch (_) {
+      // Keep local state even if the network write fails.
+    }
   }
 }
