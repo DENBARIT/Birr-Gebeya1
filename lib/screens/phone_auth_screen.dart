@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import '../models/app_state.dart';
 import '../theme/design_system.dart';
+import '../widgets/brand_logo.dart';
 import 'connect_telebirr_screen.dart';
 import 'dashboard_screen.dart';
 import 'otp_verification_screen.dart';
@@ -43,9 +44,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     _authAction = widget.initialAction;
     _authMethod =
         _authAction == AuthAction.signIn ||
-                _authAction == AuthAction.resetPassword
-            ? AuthMethod.email
-            : widget.initialMethod;
+            _authAction == AuthAction.resetPassword
+        ? AuthMethod.email
+        : widget.initialMethod;
   }
 
   @override
@@ -109,8 +110,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         final otpResult = await Navigator.of(context).push<bool?>(
           MaterialPageRoute(
             builder: (_) => OtpVerificationScreen(
-              phoneNumber:
-                  _authMethod == AuthMethod.phone ? contactValue : '',
+              phoneNumber: _authMethod == AuthMethod.phone ? contactValue : '',
               email: _authMethod == AuthMethod.email ? contactValue : '',
               contactValue: contactValue,
               channel: _authMethod == AuthMethod.email ? 'email' : 'phone',
@@ -134,8 +134,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         await appState.updateProfile(
           userName: _buildDisplayName(contactValue),
           fullNameValue: _buildDisplayName(contactValue),
-          telebirrNumberValue:
-              _authMethod == AuthMethod.phone ? contactValue : null,
+          telebirrNumberValue: _authMethod == AuthMethod.phone
+              ? contactValue
+              : null,
           email: _authMethod == AuthMethod.email ? contactValue : null,
           phoneNumber: _authMethod == AuthMethod.phone ? contactValue : null,
         );
@@ -259,15 +260,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               Icon(
                 icon,
                 size: 16,
-                color:
-                    selected ? Colors.white : BirrTheme.onSurfaceVariant,
+                color: selected ? Colors.white : BirrTheme.onSurfaceVariant,
               ),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: BirrTheme.getLabelBold(context).copyWith(
-                  color:
-                      selected ? Colors.white : BirrTheme.onSurfaceVariant,
+                  color: selected ? Colors.white : BirrTheme.onSurfaceVariant,
                 ),
               ),
             ],
@@ -293,10 +292,18 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             );
           },
         ),
-        title: Text(
-          'ብር Gebeya',
-          style: BirrTheme.getHeadlineLgMobile(context)
-              .copyWith(color: BirrTheme.primary, fontWeight: FontWeight.w800),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const BrandLogo(size: 34, showLabel: false, showGlow: false),
+            const SizedBox(width: 10),
+            Text(
+              'ብር Gebeya',
+              style: BirrTheme.getHeadlineLgMobile(
+                context,
+              ).copyWith(color: BirrTheme.primary, fontWeight: FontWeight.w800),
+            ),
+          ],
         ),
       ),
       body: SafeArea(
@@ -312,41 +319,54 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 24.0),
+                  const SizedBox(height: 12.0),
                   Center(
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: const BoxDecoration(
-                        color: BirrTheme.primaryContainer,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.account_balance,
-                        size: 40,
-                        color: Colors.white,
-                      ),
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Container(
+                          width: 180,
+                          height: 180,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: BirrTheme.primary.withValues(alpha: 0.05),
+                          ),
+                        ),
+                        Container(
+                          width: 122,
+                          height: 122,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: BirrTheme.secondaryContainer.withValues(
+                              alpha: 0.14,
+                            ),
+                          ),
+                        ),
+                        const BrandLogo(size: 128),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 32.0),
+                  const SizedBox(height: 24.0),
                   Text(
                     _authAction == AuthAction.signIn
                         ? 'Sign in to your account'
                         : _authAction == AuthAction.resetPassword
-                            ? 'Reset your password'
-                            : 'Enter your credentials',
-                    style: BirrTheme.getHeadlineLg(context)
-                        .copyWith(fontWeight: FontWeight.w700),
+                        ? 'Reset your password'
+                        : 'Enter your credentials',
+                    style: BirrTheme.getHeadlineLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                   const SizedBox(height: 8.0),
                   Text(
                     _authAction == AuthAction.signIn
                         ? 'Use the email address and password you already created.'
                         : _authAction == AuthAction.resetPassword
-                            ? 'Verify your email with a one-time code and set a new password.'
-                            : 'Create your account and verify it with a one-time code.',
-                    style: BirrTheme.getBodyMd(context).copyWith(
-                        color: BirrTheme.onSurfaceVariant, height: 1.4),
+                        ? 'Verify your email with a one-time code and set a new password.'
+                        : 'Create your account and verify it with a one-time code.',
+                    style: BirrTheme.getBodyMd(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant, height: 1.4),
                   ),
                   if (_authAction == AuthAction.signIn) ...[
                     const SizedBox(height: 8.0),
@@ -370,12 +390,61 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     ),
                   ],
                   const SizedBox(height: 32.0),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, BirrTheme.surfaceContainerLow],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: BirrTheme.outlineVariant),
+                      boxShadow: [
+                        BoxShadow(
+                          color: BirrTheme.primary.withValues(alpha: 0.05),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _authAction == AuthAction.signIn
+                              ? 'Welcome back'
+                              : _authAction == AuthAction.resetPassword
+                              ? 'Secure your account'
+                              : 'Create your account',
+                          style: BirrTheme.getLabelBold(
+                            context,
+                          ).copyWith(color: BirrTheme.secondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _authAction == AuthAction.signIn
+                              ? 'Use the logo-inspired sign-in flow with a polished, calm experience.'
+                              : _authAction == AuthAction.resetPassword
+                              ? 'We will verify your email and help you set a new password.'
+                              : 'Join Birr Gebeya and verify your profile in a few quick steps.',
+                          style: BirrTheme.getBodyMd(context).copyWith(
+                            color: BirrTheme.onSurfaceVariant,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
                   if (_authAction == AuthAction.signUp) ...[
                     const SizedBox(height: 16.0),
                     Text(
                       'Verification Method',
-                      style: BirrTheme.getLabelBold(context)
-                          .copyWith(color: BirrTheme.onSurfaceVariant),
+                      style: BirrTheme.getLabelBold(
+                        context,
+                      ).copyWith(color: BirrTheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8.0),
                     Container(
@@ -410,8 +479,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   ],
                   Text(
                     _authMethod == AuthMethod.phone ? 'Mobile Number' : 'Email',
-                    style: BirrTheme.getLabelBold(context)
-                        .copyWith(color: BirrTheme.onSurfaceVariant),
+                    style: BirrTheme.getLabelBold(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8.0),
                   if (_authAction == AuthAction.signUp &&
@@ -421,13 +491,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       children: [
                         Container(
                           height: 56,
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 16.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0),
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(12),
-                            border:
-                                Border.all(color: BirrTheme.outlineVariant),
+                            border: Border.all(color: BirrTheme.outlineVariant),
                           ),
                           alignment: Alignment.center,
                           child: Text(
@@ -456,8 +524,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               }
                               return null;
                             },
-                            style: BirrTheme.getBodyLg(context)
-                                .copyWith(fontWeight: FontWeight.w600),
+                            style: BirrTheme.getBodyLg(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w600),
                             decoration: const InputDecoration(
                               hintText: '9XX XXX XXX',
                               counterText: '',
@@ -465,8 +534,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 horizontal: 16.0,
                                 vertical: 18.0,
                               ),
-                              hintStyle:
-                                  TextStyle(color: Color(0x993F4944)),
+                              hintStyle: TextStyle(color: Color(0x993F4944)),
                             ),
                           ),
                         ),
@@ -480,15 +548,17 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       validator: (value) {
                         final email = value?.trim() ?? '';
                         if (email.isEmpty) return 'Please enter your email';
-                        final emailRegex =
-                            RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
+                        final emailRegex = RegExp(
+                          r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
+                        );
                         if (!emailRegex.hasMatch(email)) {
                           return 'Please enter a valid email address';
                         }
                         return null;
                       },
-                      style: BirrTheme.getBodyLg(context)
-                          .copyWith(fontWeight: FontWeight.w600),
+                      style: BirrTheme.getBodyLg(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w600),
                       decoration: const InputDecoration(
                         hintText: 'you@example.com',
                         contentPadding: EdgeInsets.symmetric(
@@ -502,8 +572,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   if (_authAction != AuthAction.resetPassword) ...[
                     Text(
                       'Password',
-                      style: BirrTheme.getLabelBold(context)
-                          .copyWith(color: BirrTheme.onSurfaceVariant),
+                      style: BirrTheme.getLabelBold(
+                        context,
+                      ).copyWith(color: BirrTheme.onSurfaceVariant),
                     ),
                     const SizedBox(height: 8.0),
                     TextFormField(
@@ -519,16 +590,16 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         }
                         return null;
                       },
-                      style: BirrTheme.getBodyLg(context)
-                          .copyWith(fontWeight: FontWeight.w600),
+                      style: BirrTheme.getBodyLg(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w600),
                       decoration: InputDecoration(
                         hintText: 'Enter your password',
                         contentPadding: const EdgeInsets.symmetric(
                           horizontal: 16.0,
                           vertical: 18.0,
                         ),
-                        hintStyle:
-                            const TextStyle(color: Color(0x993F4944)),
+                        hintStyle: const TextStyle(color: Color(0x993F4944)),
                         suffixIcon: IconButton(
                           icon: Icon(
                             _obscurePassword
@@ -538,7 +609,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           ),
                           onPressed: () {
                             setState(
-                                () => _obscurePassword = !_obscurePassword);
+                              () => _obscurePassword = !_obscurePassword,
+                            );
                           },
                         ),
                       ),
@@ -558,10 +630,11 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           _authAction == AuthAction.signIn
                               ? 'Enter your email and password to sign in.'
                               : _authAction == AuthAction.resetPassword
-                                  ? 'Use the code sent to your email, then create a new password.'
-                                  : 'Send a verification code to continue your sign-up.',
-                          style: BirrTheme.getLabelMd(context)
-                              .copyWith(color: BirrTheme.onSurfaceVariant),
+                              ? 'Use the code sent to your email, then create a new password.'
+                              : 'Send a verification code to continue your sign-up.',
+                          style: BirrTheme.getLabelMd(
+                            context,
+                          ).copyWith(color: BirrTheme.onSurfaceVariant),
                         ),
                       ),
                     ],
@@ -593,13 +666,13 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                               _authAction == AuthAction.signIn
                                   ? 'Sign In'
                                   : _authAction == AuthAction.resetPassword
-                                      ? 'Send reset code'
-                                      : 'Send verification code',
+                                  ? 'Send reset code'
+                                  : 'Send verification code',
                               style: BirrTheme.getHeadlineMdMobile(context)
                                   .copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                     ),
                   ),
@@ -614,7 +687,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           });
                         },
                         child: Text(
-                          'Already have an account? Sign In',
+                          'Already have an account? Sign in',
                           style: BirrTheme.getBodyMd(context).copyWith(
                             color: BirrTheme.primary,
                             decoration: TextDecoration.underline,
