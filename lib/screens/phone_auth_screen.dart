@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/app_state.dart';
+import '../services/auth_service.dart';
 import '../theme/design_system.dart';
 import '../widgets/brand_logo.dart';
 import 'connect_telebirr_screen.dart';
@@ -32,6 +35,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
+  final AuthService _auth = AuthService();
 
   late AuthAction _authAction;
   late AuthMethod _authMethod;
@@ -99,46 +103,49 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
     try {
       if (_authAction == AuthAction.signUp) {
-        // Generate a simple 6-digit demo OTP
-        final verificationCode =
-            (100000 + DateTime.now().millisecondsSinceEpoch % 900000)
-                .toString()
-                .substring(0, 6);
+        final isEmail = _authMethod == AuthMethod.email;
+        // Supabase phone OTP requires E.164 with no spaces (e.g. +2519XXXXXXXX).
+        final e164Phone = contactValue.replaceAll(' ', '');
+
+        // Ask Supabase to send a real OTP (e-mail confirmation code, or SMS).
+        if (isEmail) {
+          await _auth.sendEmailSignupOtp(
+            email: contactValue,
+            password: _passwordController.text.trim(),
+          );
+        } else {
+          await _auth.sendSmsOtp(phone: e164Phone);
+        }
 
         if (!mounted) return;
 
         final otpResult = await Navigator.of(context).push<bool?>(
           MaterialPageRoute(
             builder: (_) => OtpVerificationScreen(
-              phoneNumber: _authMethod == AuthMethod.phone ? contactValue : '',
-              email: _authMethod == AuthMethod.email ? contactValue : '',
+              phoneNumber: isEmail ? '' : e164Phone,
+              email: isEmail ? contactValue : '',
               contactValue: contactValue,
-              channel: _authMethod == AuthMethod.email ? 'email' : 'phone',
-              initialOtp: verificationCode,
-              authEmail: contactValue,
-              password: _passwordController.text.trim(),
-              isPasswordReset: false,
+              channel: isEmail ? 'email' : 'phone',
+              purpose: isEmail ? OtpPurpose.signup : OtpPurpose.sms,
             ),
           ),
         );
 
         if (otpResult != true) {
-          setState(() => _isSubmitting = false);
+          if (mounted) setState(() => _isSubmitting = false);
           return;
         }
 
         if (!mounted) return;
 
-        // Save profile locally
+        // Session now exists — persist the profile row to Supabase.
         final appState = context.read<AppState>();
         await appState.updateProfile(
           userName: _buildDisplayName(contactValue),
           fullNameValue: _buildDisplayName(contactValue),
-          telebirrNumberValue: _authMethod == AuthMethod.phone
-              ? contactValue
-              : null,
-          email: _authMethod == AuthMethod.email ? contactValue : null,
-          phoneNumber: _authMethod == AuthMethod.phone ? contactValue : null,
+          telebirrNumberValue: isEmail ? null : contactValue,
+          email: isEmail ? contactValue : null,
+          phoneNumber: isEmail ? null : contactValue,
         );
 
         if (!mounted) return;
@@ -160,10 +167,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       }
 
       if (_authAction == AuthAction.resetPassword) {
-        final verificationCode =
-            (100000 + DateTime.now().millisecondsSinceEpoch % 900000)
-                .toString()
-                .substring(0, 6);
+        final email = _emailController.text.trim();
+
+        // Send a real password-recovery code.
+        await _auth.sendPasswordResetOtp(email: email);
 
         if (!mounted) return;
 
@@ -171,30 +178,47 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           MaterialPageRoute(
             builder: (_) => OtpVerificationScreen(
               phoneNumber: '',
-              email: _emailController.text.trim(),
-              contactValue: _emailController.text.trim(),
+              email: email,
+              contactValue: email,
               channel: 'email',
-              initialOtp: verificationCode,
-              authEmail: _emailController.text.trim(),
-              password: '',
-              isPasswordReset: true,
+              purpose: OtpPurpose.recovery,
             ),
           ),
         );
 
-        if (otpResult == true && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Password updated successfully. Please sign in.'),
-              backgroundColor: BirrTheme.primary,
-            ),
-          );
-          _backToSignIn();
+        if (otpResult != true) {
+          if (mounted) setState(() => _isSubmitting = false);
+          return;
         }
+
+        // Recovery verified -> a session exists; collect and set new password.
+        if (!mounted) return;
+        final newPassword = await _promptNewPassword();
+        if (newPassword == null) {
+          if (mounted) setState(() => _isSubmitting = false);
+          return;
+        }
+
+        await _auth.updatePassword(newPassword: newPassword);
+        await _auth.signOut();
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password updated successfully. Please sign in.'),
+            backgroundColor: BirrTheme.primary,
+          ),
+        );
+        _backToSignIn();
         return;
       }
 
-      // Sign In — mock: just navigate to dashboard
+      // Sign In — real e-mail + password authentication.
+      await _auth.signInWithPassword(
+        email: contactValue,
+        password: _passwordController.text.trim(),
+      );
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -203,15 +227,20 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         ),
       );
 
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!mounted) return;
-
       await context.read<AppState>().refreshFromSupabase();
 
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AppNavigationShell()),
         (route) => false,
+      );
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: BirrTheme.error,
+        ),
       );
     } catch (error) {
       if (!mounted) return;
@@ -226,6 +255,66 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         setState(() => _isSubmitting = false);
       }
     }
+  }
+
+  /// Collects a new password after a verified recovery code.
+  Future<String?> _promptNewPassword() {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool obscure = true;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return AlertDialog(
+              title: const Text('Set a new password'),
+              content: Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: controller,
+                  obscureText: obscure,
+                  autofocus: true,
+                  validator: (value) {
+                    final password = value?.trim() ?? '';
+                    if (password.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'New password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscure ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () =>
+                          setLocalState(() => obscure = !obscure),
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      Navigator.of(dialogContext).pop(controller.text.trim());
+                    }
+                  },
+                  child: const Text('Update'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _buildSegmentedButton({
