@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport"/>
+<title>ብር Gebeya - Home Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            -webkit-tap-highlight-color: transparent;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#84d6b9",
+                        "tertiary-fixed": "#ffdad4",
+                        "surface-container": "#ebefeb",
+                        "on-primary-container": "#9aedcf",
+                        "surface-container-low": "#f1f4f1",
+                        "secondary-fixed": "#ffdcbb",
+                        "on-primary-fixed-variant": "#00513e",
+                        "on-tertiary-fixed-variant": "#743329",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e3e0",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eef2ee",
+                        "outline": "#6f7a74",
+                        "primary": "#005440",
+                        "surface-variant": "#e0e3e0",
+                        "inverse-primary": "#84d6b9",
+                        "surface-dim": "#d7dbd7",
+                        "surface-tint": "#086b53",
+                        "primary-container": "#0f6e56",
+                        "on-secondary-fixed": "#2b1700",
+                        "surface-container-high": "#e5e9e5",
+                        "on-tertiary-fixed": "#3b0804",
+                        "tertiary-container": "#954c41",
+                        "tertiary": "#78352b",
+                        "secondary": "#885200",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#673d00",
+                        "on-surface": "#181d1a",
+                        "on-secondary-container": "#704200",
+                        "on-primary-fixed": "#002117",
+                        "surface": "#f7faf6",
+                        "inverse-surface": "#2d312f",
+                        "outline-variant": "#bec9c3",
+                        "background": "#f7faf6",
+                        "secondary-fixed-dim": "#ffb869",
+                        "surface-bright": "#f7faf6",
+                        "primary-fixed": "#a0f3d4",
+                        "secondary-container": "#fdad4e",
+                        "on-background": "#181d1a",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#ffd3cc",
+                        "on-surface-variant": "#3f4944",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb4a8",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "base-unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "display-currency": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "display-currency": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface flex justify-center">
+<div class="w-[390px] min-h-screen bg-surface flex flex-col relative overflow-x-hidden">
+<!-- TopAppBar -->
+<header class="bg-surface dark:bg-surface-dim flex justify-between items-center w-full px-container-margin py-stack-sm sticky top-0 z-50">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest flex items-center justify-center overflow-hidden border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional headshot of a young Ethiopian man with a friendly expression, set against a soft-focus corporate office background. The lighting is bright and natural, reflecting a modern and trustworthy financial atmosphere. The overall aesthetic is clean and minimalist, aligning with high-end banking applications." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCrRmXq_qtBefFzGuF1HQ2qejzQTXURcb58rPpoF-a1RK_e79lwyykK7X4LMtCO41V5EOGwB8-QeXj-vI-wihwX6eHrHOlbolNzOLE_Po4EFnAodFahtvelQAtwmSjncFHP6lHOyznz0wqC6xoCUrb7BuO6_PXy4ZTDTTt-cW7QUJaVT5T9ifT1yT7DX-TAHYJvlh9ZqqJFZi6GMTTPVQo8blcqgBQ2pPAE-lItYzJ5wnYgDLQ1ALbn-xYyMExyZuz_RRGaiCNajQ"/>
+</div>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary dark:text-primary-fixed-dim">ብር Gebeya</h1>
+</div>
+<button class="bg-surface-container-low px-3 py-1.5 rounded-full border border-outline-variant text-primary font-label-bold text-label-bold active:scale-95 transition-transform duration-200">
+                አማርኛ
+            </button>
+</header>
+<main class="flex-1 px-container-margin pt-stack-md pb-32">
+<!-- Greeting Section -->
+<section class="mb-stack-lg">
+<p class="text-on-surface-variant font-body-md text-body-md">Good morning,</p>
+<h2 class="text-on-surface font-headline-lg text-headline-lg">Abebe 👋</h2>
+</section>
+<!-- Summary Card -->
+<section class="mb-stack-lg relative overflow-hidden bg-primary text-on-primary rounded-xl p-5 shadow-lg">
+<div class="absolute top-0 right-0 p-4 opacity-10">
+<span class="material-symbols-outlined text-6xl">account_balance</span>
+</div>
+<div class="mb-stack-lg">
+<p class="font-label-md text-label-md opacity-80 uppercase tracking-wider">Total Invested</p>
+<div class="flex items-baseline gap-2">
+<span class="font-display-currency text-display-currency">ETB 5,000</span>
+</div>
+</div>
+<div class="grid grid-cols-2 gap-stack-md pt-stack-md border-t border-primary-container">
+<div>
+<p class="font-label-md text-label-md opacity-80 mb-1">Expected Return</p>
+<p class="font-headline-md text-headline-md text-on-primary-container">ETB 5,312</p>
+</div>
+<div>
+<p class="font-label-md text-label-md opacity-80 mb-1">Next Maturity</p>
+<p class="font-headline-md text-headline-md">28 days</p>
+</div>
+</div>
+</section>
+<!-- Action Buttons -->
+<div class="flex gap-stack-md mb-stack-lg">
+<button class="flex-1 bg-primary text-on-primary py-3 rounded-xl font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-lg">add_circle</span>
+                    New Investment
+                </button>
+<button class="flex-1 border border-secondary text-secondary py-3 rounded-xl font-label-bold text-label-bold flex items-center justify-center gap-2 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-lg">account_balance_wallet</span>
+                    Withdraw
+                </button>
+</div>
+<!-- Active Treasury Bills Section -->
+<section>
+<div class="flex justify-between items-center mb-stack-md">
+<h3 class="font-headline-md text-headline-md text-on-surface">Active Treasury Bills</h3>
+<button class="text-primary font-label-bold text-label-bold">View All</button>
+</div>
+<!-- Horizontal Scrollable Cards -->
+<div class="flex overflow-x-auto gap-stack-md hide-scrollbar pb-2">
+<!-- Bill Card 1 -->
+<div class="min-w-[280px] bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="bg-secondary-container text-on-secondary-container px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest mb-1 inline-block">Fixed Term</span>
+<h4 class="font-headline-md-mobile text-headline-md-mobile">28-Day T-Bill</h4>
+</div>
+<div class="text-right">
+<p class="text-primary font-bold text-lg">8.5%</p>
+<p class="text-[10px] text-on-surface-variant">p.a.</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between text-label-md font-label-md text-on-surface-variant">
+<span>Pool Progress</span>
+<span class="text-on-surface font-bold">73%</span>
+</div>
+<!-- Custom Progress Bar -->
+<div class="w-full h-2 bg-primary/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 73%"></div>
+</div>
+<div class="flex justify-between items-center pt-2">
+<div class="text-label-md">
+<p class="text-on-surface-variant">Min Investment</p>
+<p class="text-on-surface font-bold">ETB 500</p>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg text-label-bold font-label-bold active:scale-95 transition-transform">
+                                    Invest
+                                </button>
+</div>
+</div>
+</div>
+<!-- Bill Card 2 -->
+<div class="min-w-[280px] bg-surface-container-lowest border border-outline-variant rounded-xl p-4 shadow-sm">
+<div class="flex justify-between items-start mb-4">
+<div>
+<span class="bg-surface-container-highest text-on-surface-variant px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-widest mb-1 inline-block">Daily Liquidity</span>
+<h4 class="font-headline-md-mobile text-headline-md-mobile">91-Day T-Bill</h4>
+</div>
+<div class="text-right">
+<p class="text-primary font-bold text-lg">9.2%</p>
+<p class="text-[10px] text-on-surface-variant">p.a.</p>
+</div>
+</div>
+<div class="space-y-3">
+<div class="flex justify-between text-label-md font-label-md text-on-surface-variant">
+<span>Pool Progress</span>
+<span class="text-on-surface font-bold">45%</span>
+</div>
+<div class="w-full h-2 bg-primary/10 rounded-full overflow-hidden">
+<div class="h-full bg-primary rounded-full" style="width: 45%"></div>
+</div>
+<div class="flex justify-between items-center pt-2">
+<div class="text-label-md">
+<p class="text-on-surface-variant">Min Investment</p>
+<p class="text-on-surface font-bold">ETB 1,000</p>
+</div>
+<button class="bg-primary text-on-primary px-4 py-2 rounded-lg text-label-bold font-label-bold active:scale-95 transition-transform">
+                                    Invest
+                                </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Secondary Info Section -->
+<section class="mt-stack-lg">
+<div class="bg-tertiary-fixed text-on-tertiary-fixed-variant p-4 rounded-xl flex items-center gap-4">
+<span class="material-symbols-outlined text-tertiary text-3xl">info</span>
+<div>
+<p class="font-label-bold text-label-bold">Secure and Guaranteed</p>
+<p class="text-label-md">All treasury bills are backed by the National Bank of Ethiopia.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-[390px] z-50 flex justify-around items-center px-4 py-2 pb-safe bg-surface dark:bg-surface-dim border-t border-outline-variant dark:border-outline">
+<a class="flex flex-col items-center justify-center bg-primary-container dark:bg-primary text-on-primary-container dark:text-on-primary rounded-xl px-3 py-1 active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="home">home</span>
+<span class="font-label-bold text-label-bold">Home</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-bold text-label-bold">Invest</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="pie_chart">pie_chart</span>
+<span class="font-label-bold text-label-bold">Portfolio</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+<span class="font-label-bold text-label-bold">Alerts</span>
+</a>
+<a class="flex flex-col items-center justify-center text-on-surface-variant dark:text-outline-variant px-3 py-1 hover:bg-surface-container-highest dark:hover:bg-surface-variant active:scale-90 transition-all duration-150" href="#">
+<span class="material-symbols-outlined" data-icon="person">person</span>
+<span class="font-label-bold text-label-bold">Profile</span>
+</a>
+</nav>
+</div>
+<script>
+        // Micro-interactions and interactions
+        document.querySelectorAll('button, a').forEach(el => {
+            el.addEventListener('click', (e) => {
+                // Haptic-like feedback logic if native or just simple tracking
+                console.log('Action triggered:', el.innerText || el.getAttribute('data-icon'));
+            });
+        });
+
+        // Initialize Material Symbols logic if needed dynamically
+        document.querySelectorAll('[data-icon]').forEach(iconEl => {
+            const iconName = iconEl.getAttribute('data-icon');
+            if (iconEl.tagName !== 'SPAN') {
+                const span = iconEl.querySelector('.material-symbols-outlined');
+                if (span) span.innerText = iconName;
+            } else {
+                iconEl.innerText = iconName;
+            }
+        });
+    </script>
+</body></html>

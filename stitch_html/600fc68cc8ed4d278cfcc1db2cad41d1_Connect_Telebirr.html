@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Connect Telebirr - ብር Gebeya</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .success-checkmark {
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+            animation: dash 0.6s ease-in-out forwards;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: 0; }
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(8px);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#84d6b9",
+                        "tertiary-fixed": "#ffdad4",
+                        "surface-container": "#ebefeb",
+                        "on-primary-container": "#9aedcf",
+                        "surface-container-low": "#f1f4f1",
+                        "secondary-fixed": "#ffdcbb",
+                        "on-primary-fixed-variant": "#00513e",
+                        "on-tertiary-fixed-variant": "#743329",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e3e0",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eef2ee",
+                        "outline": "#6f7a74",
+                        "primary": "#005440",
+                        "surface-variant": "#e0e3e0",
+                        "inverse-primary": "#84d6b9",
+                        "surface-dim": "#d7dbd7",
+                        "surface-tint": "#086b53",
+                        "primary-container": "#0f6e56",
+                        "on-secondary-fixed": "#2b1700",
+                        "surface-container-high": "#e5e9e5",
+                        "on-tertiary-fixed": "#3b0804",
+                        "tertiary-container": "#954c41",
+                        "tertiary": "#78352b",
+                        "secondary": "#885200",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#673d00",
+                        "on-surface": "#181d1a",
+                        "on-secondary-container": "#704200",
+                        "on-primary-fixed": "#002117",
+                        "surface": "#f7faf6",
+                        "inverse-surface": "#2d312f",
+                        "outline-variant": "#bec9c3",
+                        "background": "#f7faf6",
+                        "secondary-fixed-dim": "#ffb869",
+                        "surface-bright": "#f7faf6",
+                        "primary-fixed": "#a0f3d4",
+                        "secondary-container": "#fdad4e",
+                        "on-background": "#181d1a",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#ffd3cc",
+                        "on-surface-variant": "#3f4944",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb4a8",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "base-unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "display-currency": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "display-currency": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-surface flex justify-center min-h-screen">
+<!-- Mobile Container (390px fixed) -->
+<main class="w-[390px] min-h-screen bg-surface flex flex-col relative overflow-hidden">
+<!-- TopAppBar (Suppressed navigation labels for task focus) -->
+<header class="flex justify-between items-center w-full px-container-margin py-stack-sm sticky top-0 z-50 bg-surface">
+<button class="flex items-center justify-center w-10 h-10 rounded-full hover:bg-surface-container-low active:scale-95 transition-transform duration-200" onclick="window.history.back()">
+<span class="material-symbols-outlined text-primary">arrow_back</span>
+</button>
+<h1 class="font-headline-lg text-headline-lg text-primary font-extrabold tracking-tight">ብር Gebeya</h1>
+<div class="w-10"></div> <!-- Spacer for balance -->
+</header>
+<!-- Content Canvas -->
+<section class="flex-1 px-container-margin pt-stack-lg pb-stack-lg">
+<!-- Connection State: Form -->
+<div class="space-y-stack-lg transition-all duration-500 opacity-100" id="connection-form">
+<div class="text-center space-y-stack-sm">
+<h2 class="font-headline-md text-headline-md text-on-surface">Connect your Telebirr wallet</h2>
+<p class="font-body-md text-on-surface-variant px-4">Link your mobile wallet to start investing in Ethiopian money markets.</p>
+</div>
+<!-- Branding Visual (Asymmetric Bento Style) -->
+<div class="relative w-full h-48 rounded-xl overflow-hidden bg-surface-container shadow-sm border border-outline-variant group">
+<img class="w-full h-full object-cover opacity-80 mix-blend-multiply transition-transform duration-700 group-hover:scale-105" data-alt="A clean, minimalist digital landscape showing abstract currency symbols and floating data nodes. The aesthetic is high-end corporate with deep green and soft amber accents under bright, professional studio lighting. The scene conveys Ethiopian financial growth through modern, futuristic geometry and soft tonal layers of white and grey." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBWzjt4KC7AdoaF2zBESElR6MFNOuDaaUnBTH1Nlc0nHGy0pZOxuhkgGY0VQkZ-3s_9zkQ-dxIwmxoqC3W54K9qaxzri_Wy2YfZ9uKj3A4JY2VzuYor5zlO5JBR351ugwUeyZxjiwXVt0X70F4Na4Jbfgu4agGwGQrqScZpDNApXhP2cvAct7_-c0FIhpJRPHkTjEvahh6q091tVktueEL3fjOqv2m9z-wE20IqZzTPBnaONWPcasUY0qEiecRmzpMtu-Ogvt-4Zw"/>
+<div class="absolute inset-0 flex items-center justify-center">
+<div class="w-24 h-24 bg-white rounded-2xl shadow-xl flex items-center justify-center p-4 border border-outline-variant">
+<!-- Telebirr Placeholder Brand Icon -->
+<div class="text-primary flex flex-col items-center">
+<span class="material-symbols-outlined text-[48px]" style="font-variation-settings: 'FILL' 1;">account_balance_wallet</span>
+<span class="font-label-bold text-[10px] mt-1 uppercase tracking-widest">Telebirr</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Input Field Group -->
+<div class="space-y-stack-sm">
+<label class="font-label-bold text-on-surface-variant block ml-1" for="phone">Your Telebirr phone number</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 font-body-lg text-on-surface-variant border-r border-outline-variant pr-3">+251</span>
+<input class="w-full pl-20 pr-4 py-4 rounded-xl border border-outline-variant bg-white focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all font-body-lg" id="phone" maxlength="9" placeholder="9XX XXX XXX" type="tel"/>
+</div>
+<div class="flex items-start gap-2 px-1">
+<span class="material-symbols-outlined text-primary text-[18px]">info</span>
+<p class="font-label-md text-on-surface-variant">Your investments will be funded from this wallet</p>
+</div>
+</div>
+<!-- Primary Action -->
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-headline-md active:scale-95 transition-all duration-200 hover:bg-primary-container shadow-md" id="connect-btn">
+                    Connect Wallet
+                </button>
+</div>
+<!-- Connection State: Success (Hidden by default) -->
+<div class="hidden flex flex-col items-center justify-center space-y-stack-lg py-12 text-center animate-in fade-in zoom-in duration-500" id="success-state">
+<div class="w-24 h-24 rounded-full bg-primary-container/20 flex items-center justify-center relative">
+<div class="absolute inset-0 bg-primary/10 rounded-full animate-ping"></div>
+<svg class="w-16 h-16 text-primary" fill="none" stroke="currentColor" stroke-width="3" viewbox="0 0 24 24">
+<path class="success-checkmark" d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"></path>
+</svg>
+</div>
+<div class="space-y-stack-sm">
+<h2 class="font-headline-lg text-headline-lg text-primary">Wallet connected</h2>
+<p class="font-body-lg text-on-surface-variant bg-surface-container px-4 py-2 rounded-full inline-block" id="connected-number">
+                        +251 9XX XXX XXX
+                    </p>
+</div>
+<p class="font-body-md text-on-surface-variant max-w-[280px]">
+                    You're all set! You can now use your Telebirr balance to invest in high-yield money market pools.
+                </p>
+<button class="w-full bg-primary text-on-primary py-4 rounded-xl font-headline-md active:scale-95 transition-all duration-200 shadow-md">
+                    Explore Investments
+                </button>
+</div>
+</section>
+<!-- Footer / Safety Note -->
+<footer class="p-container-margin mt-auto text-center">
+<div class="bg-surface-container-low p-stack-md rounded-xl border border-outline-variant/30">
+<p class="font-label-md text-on-surface-variant leading-relaxed">
+                    Secured by Ethio Telecom &amp; Gebeya. Your data is encrypted and handled according to Ethiopian financial regulations.
+                </p>
+</div>
+</footer>
+</main>
+<script>
+        const connectBtn = document.getElementById('connect-btn');
+        const phoneInput = document.getElementById('phone');
+        const connectionForm = document.getElementById('connection-form');
+        const successState = document.getElementById('success-state');
+        const connectedNumber = document.getElementById('connected-number');
+
+        connectBtn.addEventListener('click', () => {
+            const val = phoneInput.value;
+            if (val.length >= 9) {
+                // Mocking connection delay
+                connectBtn.disabled = true;
+                connectBtn.innerText = "Connecting...";
+                connectBtn.style.opacity = "0.7";
+
+                setTimeout(() => {
+                    connectionForm.classList.add('hidden');
+                    successState.classList.remove('hidden');
+                    connectedNumber.innerText = `+251 ${val.slice(0,1)}XX XXX ${val.slice(-3)}`;
+                }, 1500);
+            } else {
+                phoneInput.classList.add('border-error');
+                setTimeout(() => phoneInput.classList.remove('border-error'), 2000);
+            }
+        });
+
+        // Basic formatting for phone input
+        phoneInput.addEventListener('input', (e) => {
+            e.target.value = e.target.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body></html>

@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Phone Authentication - ብር Gebeya</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#84d6b9",
+                        "tertiary-fixed": "#ffdad4",
+                        "surface-container": "#ebefeb",
+                        "on-primary-container": "#9aedcf",
+                        "surface-container-low": "#f1f4f1",
+                        "secondary-fixed": "#ffdcbb",
+                        "on-primary-fixed-variant": "#00513e",
+                        "on-tertiary-fixed-variant": "#743329",
+                        "on-primary": "#ffffff",
+                        "surface-container-highest": "#e0e3e0",
+                        "on-error": "#ffffff",
+                        "inverse-on-surface": "#eef2ee",
+                        "outline": "#6f7a74",
+                        "primary": "#005440",
+                        "surface-variant": "#e0e3e0",
+                        "inverse-primary": "#84d6b9",
+                        "surface-dim": "#d7dbd7",
+                        "surface-tint": "#086b53",
+                        "primary-container": "#0f6e56",
+                        "on-secondary-fixed": "#2b1700",
+                        "surface-container-high": "#e5e9e5",
+                        "on-tertiary-fixed": "#3b0804",
+                        "tertiary-container": "#954c41",
+                        "tertiary": "#78352b",
+                        "secondary": "#885200",
+                        "error-container": "#ffdad6",
+                        "on-secondary-fixed-variant": "#673d00",
+                        "on-surface": "#181d1a",
+                        "on-secondary-container": "#704200",
+                        "on-primary-fixed": "#002117",
+                        "surface": "#f7faf6",
+                        "inverse-surface": "#2d312f",
+                        "outline-variant": "#bec9c3",
+                        "background": "#f7faf6",
+                        "secondary-fixed-dim": "#ffb869",
+                        "surface-bright": "#f7faf6",
+                        "primary-fixed": "#a0f3d4",
+                        "secondary-container": "#fdad4e",
+                        "on-background": "#181d1a",
+                        "on-secondary": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-container": "#ffd3cc",
+                        "on-surface-variant": "#3f4944",
+                        "on-error-container": "#93000a",
+                        "tertiary-fixed-dim": "#ffb4a8",
+                        "surface-container-lowest": "#ffffff"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-sm": "8px",
+                        "gutter": "16px",
+                        "container-margin": "20px",
+                        "stack-lg": "24px",
+                        "stack-md": "16px",
+                        "base-unit": "4px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Inter"],
+                        "display-currency": ["Inter"],
+                        "headline-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "body-md": ["Inter"],
+                        "label-bold": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "headline-lg-mobile": ["22px", {"lineHeight": "28px", "fontWeight": "700"}],
+                        "display-currency": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                        "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "headline-md-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                        "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                        "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                        "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            background-color: #F8F7F2;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+        }
+        .app-container {
+            width: 390px;
+            min-height: 100vh;
+            background-color: #f7faf6;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .tonal-layer {
+            background-color: #FFFFFF;
+            border: 1px solid #E8E7E0;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-[#F8F7F2] text-on-surface">
+<div class="app-container shadow-2xl">
+<!-- Top App Bar (As specified in JSON) -->
+<header class="flex justify-between items-center w-full px-container-margin py-stack-sm sticky top-0 z-50 bg-surface dark:bg-surface-dim">
+<div class="flex items-center gap-3">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-surface-container-low active:scale-95 transition-transform duration-200">
+<span class="material-symbols-outlined text-on-surface-variant">arrow_back</span>
+</button>
+<span class="font-headline-md-mobile text-headline-md-mobile font-bold text-primary">ብር Gebeya</span>
+</div>
+<button class="text-primary font-label-bold text-label-bold active:scale-95 transition-transform duration-200 px-3 py-1 rounded-lg hover:bg-surface-container-low">
+                አማርኛ
+            </button>
+</header>
+<!-- Main Content Canvas -->
+<main class="flex-grow px-container-margin pt-stack-lg flex flex-col">
+<!-- Hero Illustration Area (Asymmetric Layout) -->
+<div class="mb-stack-lg relative overflow-hidden rounded-xl h-48 w-full bg-surface-container-high">
+<img class="w-full h-full object-cover mix-blend-multiply opacity-80" data-alt="A sophisticated close-up photograph of a modern smartphone held by a professional hand, displaying a clean mobile banking interface. The background is a soft-focus corporate office with warm Ethiopian architectural elements and natural sunlight. The color palette is dominated by deep forest greens and ivory whites, reflecting a secure and premium financial institution atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBhvaZtKKh_c-ZH7nGU2jDpSYV9BJWq3MRW_4vVNQpRs4MpMBRTiZCiwfdYBzL7GDggtu-PpA_S80nn8S5rTeEQTuuo1l2agfg161orYbRxSh5UZgbW6VgrgqvAA1c-CwvxlW6JrjVju4iujETDeT78TwZP09SMk7hPtb1hzzDgW4OsESKzotU6IjFv6hOzOzqoC3MqDu8fk8lc9vB2hf3KbqAuWJBVYMEInmWnw_ehE5xDYaNwnemQtqYw5OMzHlqD_dTb8HVtRw"/>
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-high via-transparent to-transparent"></div>
+</div>
+<!-- Heading Section -->
+<section class="mb-stack-lg">
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Enter your phone number</h1>
+<p class="font-body-md text-body-md text-on-surface-variant">
+                    Access your secure money market account with just your mobile number.
+                </p>
+</section>
+<!-- Input Form Section -->
+<section class="flex flex-col gap-stack-md">
+<div class="flex flex-col gap-2">
+<label class="font-label-bold text-label-bold text-outline uppercase tracking-wider">Mobile Number</label>
+<div class="flex gap-3">
+<!-- Country Code Locked Input -->
+<div class="flex items-center justify-center bg-surface-container px-4 py-4 rounded-xl border border-[#D1D1CB] min-w-[80px]">
+<span class="font-headline-md text-headline-md text-on-surface">+251</span>
+</div>
+<!-- Main Number Input -->
+<div class="relative flex-grow">
+<input class="w-full bg-white border border-[#D1D1CB] rounded-xl px-4 py-4 font-headline-md text-headline-md text-on-surface placeholder:text-outline-variant focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-all duration-200" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="911 234 567" type="tel"/>
+</div>
+</div>
+</div>
+<p class="font-label-md text-label-md text-on-surface-variant flex items-center gap-1.5 px-1">
+<span class="material-symbols-outlined text-[16px]">info</span>
+                    We'll send a 6-digit code via SMS
+                </p>
+</section>
+<!-- Action Section -->
+<section class="mt-stack-lg flex flex-col gap-stack-md">
+<button class="w-full bg-primary text-on-primary font-headline-md py-4 rounded-xl active:scale-95 transition-transform duration-200 shadow-lg shadow-primary/10">
+                    Send OTP
+                </button>
+<div class="flex items-center justify-center py-stack-md">
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+<span class="px-4 font-label-md text-label-md text-outline">OR</span>
+<div class="h-[1px] flex-grow bg-outline-variant"></div>
+</div>
+<button class="w-full bg-transparent border border-secondary text-secondary font-headline-md py-4 rounded-xl active:scale-95 transition-transform duration-200 hover:bg-secondary/5">
+                    Continue with Email
+                </button>
+</section>
+<!-- Corporate Trust Footer -->
+<footer class="mt-auto pb-stack-lg flex flex-col items-center gap-stack-sm opacity-60">
+<div class="flex gap-4">
+<span class="material-symbols-outlined text-outline">verified_user</span>
+<span class="material-symbols-outlined text-outline">lock</span>
+<span class="material-symbols-outlined text-outline">account_balance</span>
+</div>
+<p class="font-label-md text-label-md text-outline text-center">
+                    Regulated by the National Bank of Ethiopia.<br/>Your funds are protected.
+                </p>
+</footer>
+</main>
+<!-- No Bottom Navigation as per "Task-Focused" rule in JSON Shell logic -->
+</div>
+<script>
+        // Micro-interaction for input focus effects
+        const inputField = document.querySelector('input[type="tel"]');
+        const container = inputField.parentElement;
+
+        inputField.addEventListener('focus', () => {
+            container.classList.add('scale-[1.01]');
+        });
+
+        inputField.addEventListener('blur', () => {
+            container.classList.remove('scale-[1.01]');
+        });
+
+        // Simple button ripple effect simulation
+        document.querySelectorAll('button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                let x = e.clientX - e.target.offsetLeft;
+                let y = e.clientY - e.target.offsetTop;
+                let ripples = document.createElement('span');
+                ripples.style.left = x + 'px';
+                ripples.style.top = y + 'px';
+                this.appendChild(ripples);
+                setTimeout(() => { ripples.remove() }, 1000);
+            });
+        });
+    </script>
+</body></html>

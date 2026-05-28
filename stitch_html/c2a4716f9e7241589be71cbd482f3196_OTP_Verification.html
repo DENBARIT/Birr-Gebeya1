@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F2; /* Level 0 Background per Style Guidance */
+        }
+        .otp-input:focus {
+            border-color: #005440; /* Deep Green Focus */
+            box-shadow: 0 0 0 1px #005440;
+            outline: none;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "error": "#ba1a1a",
+                      "primary-fixed-dim": "#84d6b9",
+                      "tertiary-fixed": "#ffdad4",
+                      "surface-container": "#ebefeb",
+                      "on-primary-container": "#9aedcf",
+                      "surface-container-low": "#f1f4f1",
+                      "secondary-fixed": "#ffdcbb",
+                      "on-primary-fixed-variant": "#00513e",
+                      "on-tertiary-fixed-variant": "#743329",
+                      "on-primary": "#ffffff",
+                      "surface-container-highest": "#e0e3e0",
+                      "on-error": "#ffffff",
+                      "inverse-on-surface": "#eef2ee",
+                      "outline": "#6f7a74",
+                      "primary": "#005440",
+                      "surface-variant": "#e0e3e0",
+                      "inverse-primary": "#84d6b9",
+                      "surface-dim": "#d7dbd7",
+                      "surface-tint": "#086b53",
+                      "primary-container": "#0f6e56",
+                      "on-secondary-fixed": "#2b1700",
+                      "surface-container-high": "#e5e9e5",
+                      "on-tertiary-fixed": "#3b0804",
+                      "tertiary-container": "#954c41",
+                      "tertiary": "#78352b",
+                      "secondary": "#885200",
+                      "error-container": "#ffdad6",
+                      "on-secondary-fixed-variant": "#673d00",
+                      "on-surface": "#181d1a",
+                      "on-secondary-container": "#704200",
+                      "on-primary-fixed": "#002117",
+                      "surface": "#f7faf6",
+                      "inverse-surface": "#2d312f",
+                      "outline-variant": "#bec9c3",
+                      "background": "#f7faf6",
+                      "secondary-fixed-dim": "#ffb869",
+                      "surface-bright": "#f7faf6",
+                      "primary-fixed": "#a0f3d4",
+                      "secondary-container": "#fdad4e",
+                      "on-background": "#181d1a",
+                      "on-secondary": "#ffffff",
+                      "on-tertiary": "#ffffff",
+                      "on-tertiary-container": "#ffd3cc",
+                      "on-surface-variant": "#3f4944",
+                      "on-error-container": "#93000a",
+                      "tertiary-fixed-dim": "#ffb4a8",
+                      "surface-container-lowest": "#ffffff"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "stack-sm": "8px",
+                      "gutter": "16px",
+                      "container-margin": "20px",
+                      "stack-lg": "24px",
+                      "stack-md": "16px",
+                      "base-unit": "4px"
+              },
+              "fontSize": {
+                      "headline-lg": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                      "headline-lg-mobile": ["20px", {"lineHeight": "28px", "fontWeight": "700"}],
+                      "display-currency": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "700"}],
+                      "headline-md": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "headline-md-mobile": ["18px", {"lineHeight": "24px", "fontWeight": "600"}],
+                      "label-md": ["12px", {"lineHeight": "16px", "fontWeight": "400"}],
+                      "body-lg": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "body-md": ["14px", {"lineHeight": "20px", "fontWeight": "400"}],
+                      "label-bold": ["12px", {"lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600"}]
+              }
+            },
+          },
+        }
+      </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="flex flex-col min-h-screen items-center">
+<!-- Top App Bar (Shared Component Strategy) -->
+<header class="bg-surface dark:bg-surface-dim text-primary flex justify-between items-center w-full px-container-margin py-stack-sm sticky top-0 z-50">
+<div class="flex items-center gap-stack-sm">
+<button class="active:scale-95 transition-transform duration-200 text-on-surface">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h1 class="font-headline-lg-mobile text-headline-lg-mobile font-bold text-primary">ብር Gebeya</h1>
+</div>
+<button class="text-on-surface-variant font-label-bold text-label-bold py-1 px-3 rounded-lg hover:bg-surface-container-low transition-colors">
+            አማርኛ
+        </button>
+</header>
+<!-- Main Content Canvas -->
+<main class="w-[390px] flex-grow flex flex-col px-container-margin pt-12 pb-stack-lg">
+<!-- Illustration/Icon Hero -->
+<div class="mb-stack-lg flex justify-center">
+<div class="w-20 h-20 bg-surface-container-high rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[40px] text-primary" data-icon="lock_open">lock_open</span>
+</div>
+</div>
+<!-- Header Titles -->
+<div class="text-center mb-stack-lg">
+<h2 class="font-headline-lg-mobile text-headline-lg-mobile text-on-surface mb-2">Enter verification code</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Sent to +251 9XX XXX XXX</p>
+</div>
+<!-- OTP Input Grid -->
+<div class="flex justify-between gap-2 mb-stack-md" id="otp-container">
+<input autofocus="" class="otp-input w-12 h-14 bg-white border border-[#D1D1CB] rounded-xl text-center font-headline-md text-headline-md text-on-surface" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 bg-white border border-[#D1D1CB] rounded-xl text-center font-headline-md text-headline-md text-on-surface" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 bg-white border border-[#D1D1CB] rounded-xl text-center font-headline-md text-headline-md text-on-surface" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 bg-white border border-[#D1D1CB] rounded-xl text-center font-headline-md text-headline-md text-on-surface" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 bg-white border border-[#D1D1CB] rounded-xl text-center font-headline-md text-headline-md text-on-surface" maxlength="1" type="text"/>
+<input class="otp-input w-12 h-14 bg-white border border-[#D1D1CB] rounded-xl text-center font-headline-md text-headline-md text-on-surface" maxlength="1" type="text"/>
+</div>
+<!-- Timer & Resend -->
+<div class="flex flex-col items-center mb-stack-lg">
+<p class="font-label-md text-label-md text-on-surface-variant mb-1" id="timer-label">Resend in 0:45</p>
+<button class="font-label-bold text-label-bold text-secondary opacity-50 cursor-not-allowed transition-all" disabled="" id="resend-btn">
+                Resend Code
+            </button>
+</div>
+<!-- Action Button -->
+<button class="w-full bg-primary text-on-primary font-headline-md text-headline-md py-4 rounded-xl shadow-sm hover:brightness-110 active:scale-[0.98] transition-all duration-200">
+            Verify
+        </button>
+<!-- Numeric Keypad Visualization (Simulated for Layout) -->
+<div class="mt-auto pt-stack-lg grid grid-cols-3 gap-2">
+<div class="p-4 flex justify-center text-on-surface font-headline-md opacity-20">1</div>
+<div class="p-4 flex justify-center text-on-surface font-headline-md opacity-20">2</div>
+<div class="p-4 flex justify-center text-on-surface font-headline-md opacity-20">3</div>
+<!-- More keypad visual placeholders could go here but kept clean per minimalist aesthetic -->
+</div>
+</main>
+<!-- Script for OTP Focus Logic & Timer -->
+<script>
+        // OTP Focus Forward/Backward Logic
+        const inputs = document.querySelectorAll('.otp-input');
+        inputs.forEach((input, index) => {
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && !e.target.value && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+        });
+
+        // Simple Countdown Timer
+        let timeLeft = 45;
+        const timerLabel = document.getElementById('timer-label');
+        const resendBtn = document.getElementById('resend-btn');
+
+        const countdown = setInterval(() => {
+            timeLeft--;
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            timerLabel.innerText = `Resend in ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+            if (timeLeft <= 0) {
+                clearInterval(countdown);
+                timerLabel.innerText = "Didn't receive a code?";
+                resendBtn.disabled = false;
+                resendBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                resendBtn.classList.add('hover:underline');
+            }
+        }, 1000);
+    </script>
+</body></html>
