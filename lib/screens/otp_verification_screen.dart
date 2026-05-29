@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../theme/design_system.dart';
@@ -16,7 +17,7 @@ class OtpVerificationScreen extends StatefulWidget {
   final String authEmail;
   final String password;
   final bool isPasswordReset;
-  final String otpPurpose;
+  final OtpPurpose purpose;
   final bool autoFillOtp;
   final Future<bool> Function(String otp)? onVerifyOtp;
   final Future<void> Function()? onResendOtp;
@@ -31,7 +32,7 @@ class OtpVerificationScreen extends StatefulWidget {
     required this.authEmail,
     required this.password,
     required this.isPasswordReset,
-    this.otpPurpose = 'email_otp',
+    required this.purpose,
     this.autoFillOtp = false,
     this.onVerifyOtp,
     this.onResendOtp,
