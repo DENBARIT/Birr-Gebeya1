@@ -163,6 +163,9 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     setState(() => _isVerifying = true);
     try {
+      debugPrint(
+        'Verifying OTP for purpose=${widget.purpose} contact=${widget.contactValue}',
+      );
       // Local mode: the caller handles verification (e.g. on-screen code that
       // creates the user on confirm). Falls back to Supabase OTP otherwise.
       if (widget.onVerifyOtp != null) {

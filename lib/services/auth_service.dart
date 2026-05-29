@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// Thin wrapper around Supabase Auth for the e-mail / phone OTP flows used by
@@ -22,7 +25,19 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    await _client.auth.signUp(email: email, password: password);
+    try {
+      await _ensureNetworkForAuth();
+      debugPrint('AuthService.sendEmailSignupOtp: email=$email');
+      final res = await _client.auth.signUp(email: email, password: password);
+      debugPrint('sendEmailSignupOtp response: ${res.toString()}');
+    } on SocketException catch (e, st) {
+      _logNetworkError('sendEmailSignupOtp', e, st);
+      rethrow;
+    } catch (e, st) {
+      debugPrint('sendEmailSignupOtp error: $e');
+      debugPrint('$st');
+      rethrow;
+    }
   }
 
   /// Verifies the e-mailed sign-up code. Throws [AuthException] on a bad/expired
@@ -31,6 +46,9 @@ class AuthService {
     required String email,
     required String token,
   }) {
+    debugPrint(
+      'AuthService.verifyEmailSignup: email=$email tokenLen=${token.length}',
+    );
     return _client.auth.verifyOTP(
       email: email,
       token: token,
@@ -39,7 +57,18 @@ class AuthService {
   }
 
   Future<void> resendEmailSignupOtp({required String email}) async {
-    await _client.auth.resend(type: OtpType.signup, email: email);
+    try {
+      await _ensureNetworkForAuth();
+      debugPrint('AuthService.resendEmailSignupOtp: email=$email');
+      await _client.auth.resend(type: OtpType.signup, email: email);
+    } on SocketException catch (e, st) {
+      _logNetworkError('resendEmailSignupOtp', e, st);
+      rethrow;
+    } catch (e, st) {
+      debugPrint('resendEmailSignupOtp error: $e');
+      debugPrint('$st');
+      rethrow;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -49,20 +78,38 @@ class AuthService {
     required String email,
     required String password,
   }) {
-    return _client.auth.signInWithPassword(email: email, password: password);
+    debugPrint('AuthService.signInWithPassword: email=$email');
+    return _withNetworkGuard(
+      'signInWithPassword',
+      () => _client.auth.signInWithPassword(email: email, password: password),
+    );
   }
 
   // ---------------------------------------------------------------------------
   // Phone OTP (passwordless). Requires an SMS provider configured in Supabase.
   // ---------------------------------------------------------------------------
   Future<void> sendSmsOtp({required String phone}) async {
-    await _client.auth.signInWithOtp(phone: phone);
+    try {
+      await _ensureNetworkForAuth();
+      debugPrint('AuthService.sendSmsOtp: phone=$phone');
+      await _client.auth.signInWithOtp(phone: phone);
+    } on SocketException catch (e, st) {
+      _logNetworkError('sendSmsOtp', e, st);
+      rethrow;
+    } catch (e, st) {
+      debugPrint('sendSmsOtp error: $e');
+      debugPrint('$st');
+      rethrow;
+    }
   }
 
   Future<AuthResponse> verifySmsOtp({
     required String phone,
     required String token,
   }) {
+    debugPrint(
+      'AuthService.verifySmsOtp: phone=$phone tokenLen=${token.length}',
+    );
     return _client.auth.verifyOTP(
       phone: phone,
       token: token,
@@ -71,7 +118,18 @@ class AuthService {
   }
 
   Future<void> resendSmsOtp({required String phone}) async {
-    await _client.auth.signInWithOtp(phone: phone);
+    try {
+      await _ensureNetworkForAuth();
+      debugPrint('AuthService.resendSmsOtp: phone=$phone');
+      await _client.auth.signInWithOtp(phone: phone);
+    } on SocketException catch (e, st) {
+      _logNetworkError('resendSmsOtp', e, st);
+      rethrow;
+    } catch (e, st) {
+      debugPrint('resendSmsOtp error: $e');
+      debugPrint('$st');
+      rethrow;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -79,7 +137,18 @@ class AuthService {
   // set the new password.
   // ---------------------------------------------------------------------------
   Future<void> sendPasswordResetOtp({required String email}) async {
-    await _client.auth.resetPasswordForEmail(email);
+    try {
+      await _ensureNetworkForAuth();
+      debugPrint('AuthService.sendPasswordResetOtp: email=$email');
+      await _client.auth.resetPasswordForEmail(email);
+    } on SocketException catch (e, st) {
+      _logNetworkError('sendPasswordResetOtp', e, st);
+      rethrow;
+    } catch (e, st) {
+      debugPrint('sendPasswordResetOtp error: $e');
+      debugPrint('$st');
+      rethrow;
+    }
   }
 
   Future<AuthResponse> verifyPasswordReset({
@@ -94,8 +163,48 @@ class AuthService {
   }
 
   Future<void> updatePassword({required String newPassword}) async {
-    await _client.auth.updateUser(UserAttributes(password: newPassword));
+    try {
+      await _ensureNetworkForAuth();
+      debugPrint('AuthService.updatePassword');
+      await _client.auth.updateUser(UserAttributes(password: newPassword));
+    } on SocketException catch (e, st) {
+      _logNetworkError('updatePassword', e, st);
+      rethrow;
+    } catch (e, st) {
+      debugPrint('updatePassword error: $e');
+      debugPrint('$st');
+      rethrow;
+    }
   }
 
   Future<void> signOut() => _client.auth.signOut();
+
+  Future<T> _withNetworkGuard<T>(
+    String action,
+    Future<T> Function() run,
+  ) async {
+    try {
+      await _ensureNetworkForAuth();
+      return await run();
+    } on SocketException catch (e, st) {
+      _logNetworkError(action, e, st);
+      rethrow;
+    }
+  }
+
+  Future<void> _ensureNetworkForAuth() async {
+    final host = Uri.parse(_client.rest.url).host;
+    try {
+      await InternetAddress.lookup(host);
+    } on SocketException catch (e) {
+      throw SocketException(
+        'Cannot reach Supabase host "$host". Check internet, VPN, Private DNS, or ad-blocking DNS. Original error: $e',
+      );
+    }
+  }
+
+  void _logNetworkError(String action, SocketException error, StackTrace st) {
+    debugPrint('$action network error: $error');
+    debugPrint('$st');
+  }
 }
