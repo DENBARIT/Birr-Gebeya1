@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/design_system.dart';
 import '../models/app_state.dart';
-import 'kyc_profile_setup_screen.dart';
+import 'telebirr_connection_success_screen.dart';
 
 class ConnectTelebirrScreen extends StatefulWidget {
   final String phoneNumber;
@@ -61,7 +61,10 @@ class _ConnectTelebirrScreenState extends State<ConnectTelebirrScreen> {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const KycProfileSetupScreen()),
+      MaterialPageRoute(
+        builder: (context) =>
+            TelebirrConnectionSuccessScreen(telebirrNumber: fullNumber),
+      ),
     );
   }
 
@@ -397,7 +400,7 @@ class _ConnectTelebirrScreenState extends State<ConnectTelebirrScreen> {
               elevation: 0,
             ),
             child: Text(
-              'Explore Investments',
+              'Continue',
               style: BirrTheme.getHeadlineMdMobile(
                 context,
               ).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
