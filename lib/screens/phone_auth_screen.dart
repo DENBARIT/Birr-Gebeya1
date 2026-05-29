@@ -102,6 +102,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     setState(() => _isSubmitting = true);
 
     try {
+      debugPrint(
+        'Auth submit: action=$_authAction method=$_authMethod contact=$contactValue',
+      );
       if (_authAction == AuthAction.signUp) {
         final userExists = _authMethod == AuthMethod.email
             ? await _appRepository.profileExistsByEmail(contactValue)
@@ -175,9 +178,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         // Telebirr connect -> connection success -> KYC profile -> dashboard.
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(
-            builder: (_) => ConnectTelebirrScreen(
-              phoneNumber: isEmail ? '' : contactValue,
-            ),
+            builder: (_) =>
+                ConnectTelebirrScreen(phoneNumber: isEmail ? '' : contactValue),
           ),
           (route) => false,
         );
@@ -227,6 +229,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         return;
       }
 
+      debugPrint('Attempting signInWithPassword for $contactValue');
       await _auth.signInWithPassword(
         email: contactValue,
         password: _passwordController.text.trim(),
