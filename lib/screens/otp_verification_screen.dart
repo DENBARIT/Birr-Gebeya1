@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../theme/design_system.dart';
 
 class OtpVerificationScreen extends StatefulWidget {
@@ -11,6 +12,10 @@ class OtpVerificationScreen extends StatefulWidget {
   final String authEmail;
   final String password;
   final bool isPasswordReset;
+  final String otpPurpose;
+  final bool autoFillOtp;
+  final Future<bool> Function(String otp)? onVerifyOtp;
+  final Future<void> Function()? onResendOtp;
 
   const OtpVerificationScreen({
     super.key,
@@ -22,6 +27,10 @@ class OtpVerificationScreen extends StatefulWidget {
     required this.authEmail,
     required this.password,
     required this.isPasswordReset,
+    this.otpPurpose = 'email_otp',
+    this.autoFillOtp = false,
+    this.onVerifyOtp,
+    this.onResendOtp,
   });
 
   @override
@@ -44,7 +53,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     super.initState();
     _startTimer();
     // Auto-fill the OTP if provided (for dev/demo convenience)
-    if (widget.initialOtp.length == 6) {
+    if (widget.autoFillOtp && widget.initialOtp.length == 6) {
       for (int i = 0; i < 6; i++) {
         _controllers[i].text = widget.initialOtp[i];
       }
@@ -85,17 +94,31 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
   void _resendCode() {
     if (_canResend) {
+      if (widget.onResendOtp != null) {
+        widget.onResendOtp!();
+      }
       _startTimer();
+      final fallbackEmail = dotenv.env['TEST_OTP_EMAIL'] ?? '';
+      final sentTo = widget.channel == 'email'
+          ? (widget.email.isNotEmpty
+                ? widget.email
+                : (widget.contactValue.isNotEmpty
+                      ? widget.contactValue
+                      : fallbackEmail))
+          : (widget.phoneNumber.isNotEmpty
+                ? widget.phoneNumber
+                : widget.contactValue);
+
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('A new verification code has been sent!'),
+        SnackBar(
+          content: Text('A new verification code has been sent to $sentTo'),
           backgroundColor: BirrTheme.primaryContainer,
         ),
       );
     }
   }
 
-  void _verify() {
+  Future<void> _verify() async {
     String otp = '';
     for (var controller in _controllers) {
       otp += controller.text;
@@ -111,19 +134,35 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       return;
     }
 
-    // In demo mode accept any 6-digit code (or the pre-filled initialOtp)
+    if (widget.onVerifyOtp != null) {
+      final valid = await widget.onVerifyOtp!(otp);
+      if (!mounted) return;
+      if (!valid) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('The verification code is invalid or expired.'),
+            backgroundColor: BirrTheme.error,
+          ),
+        );
+        return;
+      }
+    }
+
     Navigator.of(context).pop(true);
   }
 
   @override
   Widget build(BuildContext context) {
+    final fallbackEmail = dotenv.env['TEST_OTP_EMAIL'] ?? '';
     final displayContact = widget.channel == 'email'
-        ? widget.email.isNotEmpty
+        ? (widget.email.isNotEmpty
               ? widget.email
-              : widget.contactValue
-        : widget.phoneNumber.isNotEmpty
-        ? widget.phoneNumber
-        : widget.contactValue;
+              : (widget.contactValue.isNotEmpty
+                    ? widget.contactValue
+                    : fallbackEmail))
+        : (widget.phoneNumber.isNotEmpty
+              ? widget.phoneNumber
+              : widget.contactValue);
 
     return Scaffold(
       backgroundColor: BirrTheme.background,

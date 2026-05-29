@@ -3,6 +3,30 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class SupabaseAppRepository {
   final _client = Supabase.instance.client;
 
+  Future<bool> profileExistsByEmail(String email) async {
+    final normalizedEmail = email.trim().toLowerCase();
+    if (normalizedEmail.isEmpty) return false;
+
+    final resp = await _client
+        .from('profiles')
+        .select('id')
+        .ilike('email', normalizedEmail)
+        .maybeSingle();
+    return resp != null;
+  }
+
+  Future<bool> profileExistsByPhoneNumber(String phoneNumber) async {
+    final normalizedPhone = phoneNumber.trim();
+    if (normalizedPhone.isEmpty) return false;
+
+    final resp = await _client
+        .from('profiles')
+        .select('id')
+        .eq('phone_number', normalizedPhone)
+        .maybeSingle();
+    return resp != null;
+  }
+
   Future<Map<String, dynamic>?> fetchProfile() async {
     final user = _client.auth.currentUser;
     if (user == null) return null;

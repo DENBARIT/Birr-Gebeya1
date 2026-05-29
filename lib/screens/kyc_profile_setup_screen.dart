@@ -13,10 +13,14 @@ class KycProfileSetupScreen extends StatefulWidget {
 
 class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController(text: "Abebe");
+  final TextEditingController _nameController = TextEditingController(
+    text: 'Abebe',
+  );
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _tinController = TextEditingController();
+  final TextEditingController _dobController = TextEditingController();
 
+  String? _selectedGender;
+  DateTime? _selectedDob;
   bool _confirmAccurate = false;
   bool _agreeTerms = false;
   bool _isLoading = false;
@@ -25,12 +29,49 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _tinController.dispose();
+    _dobController.dispose();
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _pickDob() async {
+    final today = DateTime.now();
+    final initialDate =
+        _selectedDob ?? DateTime(today.year - 18, today.month, today.day);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(1900),
+      lastDate: DateTime(today.year - 13, today.month, today.day),
+      helpText: 'Select date of birth',
+    );
+
+    if (picked != null) {
+      setState(() {
+        _selectedDob = picked;
+        _dobController.text = _formatDob(picked);
+      });
+    }
+  }
+
+  String _formatDob(DateTime value) {
+    final y = value.year.toString().padLeft(4, '0');
+    final m = value.month.toString().padLeft(2, '0');
+    final d = value.day.toString().padLeft(2, '0');
+    return '$y-$m-$d';
+  }
+
+  Future<void> _submit() async {
     if (_formKey.currentState!.validate()) {
+      if (_selectedGender == null || _selectedDob == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select your gender and date of birth'),
+            backgroundColor: BirrTheme.error,
+          ),
+        );
+        return;
+      }
+
       if (!_confirmAccurate || !_agreeTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -45,8 +86,16 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
         _isLoading = true;
       });
 
-      // Update name in global state
-      Provider.of<AppState>(context, listen: false).userName = _nameController.text.trim();
+      final name = _nameController.text.trim();
+      final email = _emailController.text.trim();
+
+      await Provider.of<AppState>(context, listen: false).updateProfile(
+        userName: name,
+        fullNameValue: name,
+        genderValue: _selectedGender,
+        dateOfBirthValue: _selectedDob,
+        email: email,
+      );
 
       // Simulate network save
       Future.delayed(const Duration(milliseconds: 1200), () {
@@ -54,7 +103,7 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
           setState(() {
             _isLoading = false;
           });
-          
+
           // Clear all routes and push DashboardShell
           Navigator.pushAndRemoveUntil(
             context,
@@ -79,16 +128,18 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
         ),
         title: Text(
           'Profile Setup',
-          style: BirrTheme.getHeadlineLgMobile(context).copyWith(
-            color: BirrTheme.primary,
-            fontWeight: FontWeight.w800,
-          ),
+          style: BirrTheme.getHeadlineLgMobile(
+            context,
+          ).copyWith(color: BirrTheme.primary, fontWeight: FontWeight.w800),
         ),
       ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 20.0,
+              vertical: 16.0,
+            ),
             child: Form(
               key: _formKey,
               child: Column(
@@ -97,27 +148,25 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                   const SizedBox(height: 12.0),
                   Text(
                     'KYC Profile Setup',
-                    style: BirrTheme.getHeadlineLg(context).copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: BirrTheme.getHeadlineLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 8.0),
                   Text(
-                    'As regulated by the National Bank of Ethiopia, we require these details to activate your investment portfolio.',
-                    style: BirrTheme.getBodyMd(context).copyWith(
-                      color: BirrTheme.onSurfaceVariant,
-                      height: 1.4,
-                    ),
+                    'We require these details to activate your investment portfolio.',
+                    style: BirrTheme.getBodyMd(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant, height: 1.4),
                   ),
-                  
+
                   const SizedBox(height: 28.0),
-                  
-                  // Full Name
+
                   Text(
-                    'Full Name (as per official ID)',
-                    style: BirrTheme.getLabelBold(context).copyWith(
-                      color: BirrTheme.onSurfaceVariant,
-                    ),
+                    'Full Name',
+                    style: BirrTheme.getLabelBold(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8.0),
                   TextFormField(
@@ -128,22 +177,21 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                       }
                       return null;
                     },
-                    style: BirrTheme.getBodyLg(context).copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: BirrTheme.getBodyLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
                     decoration: const InputDecoration(
                       hintText: 'Enter your full name',
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20.0),
-                  
-                  // Email
+
                   Text(
-                    'Email Address',
-                    style: BirrTheme.getLabelBold(context).copyWith(
-                      color: BirrTheme.onSurfaceVariant,
-                    ),
+                    'Email',
+                    style: BirrTheme.getLabelBold(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8.0),
                   TextFormField(
@@ -158,37 +206,79 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                       }
                       return null;
                     },
-                    style: BirrTheme.getBodyLg(context).copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: BirrTheme.getBodyLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
                     decoration: const InputDecoration(
                       hintText: 'name@example.com',
                     ),
                   ),
-                  
+
                   const SizedBox(height: 20.0),
-                  
-                  // TIN
+
                   Text(
-                    'Taxpayer Identification Number (TIN) - Optional',
-                    style: BirrTheme.getLabelBold(context).copyWith(
-                      color: BirrTheme.onSurfaceVariant,
+                    'Gender',
+                    style: BirrTheme.getLabelBold(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 8.0),
+                  DropdownButtonFormField<String>(
+                    value: _selectedGender,
+                    items: const [
+                      DropdownMenuItem(value: 'Female', child: Text('Female')),
+                      DropdownMenuItem(value: 'Male', child: Text('Male')),
+                      DropdownMenuItem(
+                        value: 'Prefer not to say',
+                        child: Text('Prefer not to say'),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedGender = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select your gender';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Select gender',
                     ),
+                  ),
+
+                  const SizedBox(height: 20.0),
+
+                  Text(
+                    'Date of Birth',
+                    style: BirrTheme.getLabelBold(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant),
                   ),
                   const SizedBox(height: 8.0),
                   TextFormField(
-                    controller: _tinController,
-                    keyboardType: TextInputType.number,
-                    style: BirrTheme.getBodyLg(context).copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                    readOnly: true,
+                    controller: _dobController,
+                    onTap: _pickDob,
+                    validator: (value) {
+                      if (_selectedDob == null) {
+                        return 'Please select your date of birth';
+                      }
+                      return null;
+                    },
+                    style: BirrTheme.getBodyLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
                     decoration: const InputDecoration(
-                      hintText: '10-digit TIN (optional)',
+                      hintText: 'YYYY-MM-DD',
+                      suffixIcon: Icon(Icons.calendar_month_outlined),
                     ),
                   ),
-                  
+
                   const SizedBox(height: 28.0),
-                  
+
                   // Checkbox 1: Accuracy Statement
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -204,7 +294,9 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                       ),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _confirmAccurate = !_confirmAccurate),
+                          onTap: () => setState(
+                            () => _confirmAccurate = !_confirmAccurate,
+                          ),
                           child: Padding(
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
@@ -219,9 +311,9 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8.0),
-                  
+
                   // Checkbox 2: Terms & Conditions
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -237,7 +329,8 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                       ),
                       Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _agreeTerms = !_agreeTerms),
+                          onTap: () =>
+                              setState(() => _agreeTerms = !_agreeTerms),
                           child: Padding(
                             padding: const EdgeInsets.only(top: 4.0),
                             child: Text(
@@ -252,9 +345,9 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 40.0),
-                  
+
                   // Action complete setup
                   SizedBox(
                     width: double.infinity,
@@ -275,15 +368,18 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                               height: 24,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
                               ),
                             )
                           : Text(
                               'Complete Setup',
-                              style: BirrTheme.getHeadlineMdMobile(context).copyWith(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
+                              style: BirrTheme.getHeadlineMdMobile(context)
+                                  .copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                     ),
                   ),

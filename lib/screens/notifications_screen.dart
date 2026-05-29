@@ -226,51 +226,7 @@ class NotificationsScreen extends StatelessWidget {
                     },
                   ),
 
-                // Aesthetic Background Illustration Section
-                const SizedBox(height: 24),
-                Container(
-                  height: 120,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: BirrTheme.outlineVariant.withValues(alpha: 0.3),
-                    ),
-                    image: const DecorationImage(
-                      image: NetworkImage(
-                        'https://lh3.googleusercontent.com/aida-public/AB6AXuBVIhP0K-1O6F3_lDdvhWVUdpggeBjpmA_eOBE6U1ZZ6gjyCI3I2x8j3gAhZB6_xh5BA4vOlnZ-qE4Wh3whgimIxxpcmA18-GS3qPH3zI3b3ojAliKMptQNnOwnWfmhDST4PcOXVZo9-Ftm2THCp7mm1dIEDzExPPKcve_HF77Hv9hKHMrGPwrYDfWw9Lx96NGGJGIo4FNPJsB0zdriqHXKE4xGk814hxYEk514IMEZYbtp6U0Z4aawNChLZZ7dcsLZHEzxakez6g',
-                      ),
-                      fit: BoxFit.cover,
-                      colorFilter: ColorFilter.mode(
-                        Colors.black12,
-                        BlendMode.darken,
-                      ),
-                    ),
-                  ),
-                  child: Container(
-                    alignment: Alignment.bottomLeft,
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.5),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                    child: Text(
-                      'Growth in Motion'.toUpperCase(),
-                      style: BirrTheme.getLabelBold(context).copyWith(
-                        color: Colors.white,
-                        letterSpacing: 1.5,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
               ],
             ),
           ),
