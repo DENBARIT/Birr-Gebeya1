@@ -104,12 +104,25 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
             _isLoading = false;
           });
 
+          // Capture the app-level messenger before navigating so the snackbar
+          // survives the route replacement and shows on the dashboard.
+          final messenger = ScaffoldMessenger.of(context);
+
           // Clear all routes and push DashboardShell
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const AppNavigationShell()),
             (route) => false,
           );
+
+          messenger
+            ..hideCurrentSnackBar()
+            ..showSnackBar(
+              const SnackBar(
+                content: Text('Sign up successfully'),
+                backgroundColor: BirrTheme.primary,
+              ),
+            );
         }
       });
     }

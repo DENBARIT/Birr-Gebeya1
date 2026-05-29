@@ -111,16 +111,20 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
   Future<void> _resendCode() async {
     if (!_canResend) return;
     try {
-      switch (widget.purpose) {
-        case OtpPurpose.signup:
-          await _auth.resendEmailSignupOtp(email: widget.email);
-          break;
-        case OtpPurpose.recovery:
-          await _auth.sendPasswordResetOtp(email: widget.email);
-          break;
-        case OtpPurpose.sms:
-          await _auth.resendSmsOtp(phone: widget.phoneNumber);
-          break;
+      if (widget.onResendOtp != null) {
+        await widget.onResendOtp!();
+      } else {
+        switch (widget.purpose) {
+          case OtpPurpose.signup:
+            await _auth.resendEmailSignupOtp(email: widget.email);
+            break;
+          case OtpPurpose.recovery:
+            await _auth.sendPasswordResetOtp(email: widget.email);
+            break;
+          case OtpPurpose.sms:
+            await _auth.resendSmsOtp(phone: widget.phoneNumber);
+            break;
+        }
       }
       _startTimer();
       final fallbackEmail = dotenv.env['TEST_OTP_EMAIL'] ?? '';
@@ -159,16 +163,27 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
 
     setState(() => _isVerifying = true);
     try {
-      switch (widget.purpose) {
-        case OtpPurpose.signup:
-          await _auth.verifyEmailSignup(email: widget.email, token: otp);
-          break;
-        case OtpPurpose.recovery:
-          await _auth.verifyPasswordReset(email: widget.email, token: otp);
-          break;
-        case OtpPurpose.sms:
-          await _auth.verifySmsOtp(phone: widget.phoneNumber, token: otp);
-          break;
+      // Local mode: the caller handles verification (e.g. on-screen code that
+      // creates the user on confirm). Falls back to Supabase OTP otherwise.
+      if (widget.onVerifyOtp != null) {
+        final ok = await widget.onVerifyOtp!(otp);
+        if (!ok) {
+          _showError('The code you entered is incorrect.');
+          _clearInputs();
+          return;
+        }
+      } else {
+        switch (widget.purpose) {
+          case OtpPurpose.signup:
+            await _auth.verifyEmailSignup(email: widget.email, token: otp);
+            break;
+          case OtpPurpose.recovery:
+            await _auth.verifyPasswordReset(email: widget.email, token: otp);
+            break;
+          case OtpPurpose.sms:
+            await _auth.verifySmsOtp(phone: widget.phoneNumber, token: otp);
+            break;
+        }
       }
       // Verified — a real session now exists.
       if (!mounted) return;
@@ -250,12 +265,50 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
               const SizedBox(height: 8.0),
               Text(
-                'We sent a 6-digit code to $displayContact',
+                widget.autoFillOtp
+                    ? 'Confirm the code below for $displayContact'
+                    : 'We sent a 6-digit code to $displayContact',
                 textAlign: TextAlign.center,
                 style: BirrTheme.getBodyMd(
                   context,
                 ).copyWith(color: BirrTheme.onSurfaceVariant),
               ),
+              // On-screen code (local verification mode).
+              if (widget.autoFillOtp && widget.initialOtp.length == 6) ...[
+                const SizedBox(height: 16.0),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    color: BirrTheme.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: BirrTheme.primary.withValues(alpha: 0.3),
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        'Your verification code',
+                        style: BirrTheme.getLabelMd(
+                          context,
+                        ).copyWith(color: BirrTheme.onSurfaceVariant),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.initialOtp,
+                        style: BirrTheme.getHeadlineLgMobile(context).copyWith(
+                          color: BirrTheme.primary,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 8,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 40.0),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -120,15 +120,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
         final isEmail = _authMethod == AuthMethod.email;
         final e164Phone = contactValue.replaceAll(' ', '');
+        final password = _passwordController.text.trim();
 
-        if (isEmail) {
-          await _auth.sendEmailSignupOtp(
-            email: contactValue,
-            password: _passwordController.text.trim(),
-          );
-        } else {
-          await _auth.sendSmsOtp(phone: e164Phone);
-        }
+        // Generate a local on-screen verification code (no email is sent).
+        final verificationCode =
+            (100000 + (DateTime.now().microsecondsSinceEpoch % 900000))
+                .toString();
 
         if (!mounted) return;
         final otpResult = await Navigator.of(context).push<bool?>(
@@ -139,6 +136,21 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               contactValue: contactValue,
               channel: isEmail ? 'email' : 'phone',
               purpose: isEmail ? OtpPurpose.signup : OtpPurpose.sms,
+              initialOtp: verificationCode,
+              autoFillOtp: true,
+              // On confirm: validate the on-screen code, then create the user.
+              onVerifyOtp: (entered) async {
+                if (entered != verificationCode) return false;
+                if (isEmail) {
+                  // With email auto-confirm enabled, this creates AND confirms
+                  // the account immediately — no email round-trip needed.
+                  await _auth.sendEmailSignupOtp(
+                    email: contactValue,
+                    password: password,
+                  );
+                }
+                return true;
+              },
             ),
           ),
         );
@@ -159,19 +171,16 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         );
 
         if (!mounted) return;
-        if (isEmail) {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(builder: (_) => const AppNavigationShell()),
-            (route) => false,
-          );
-        } else {
-          Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => ConnectTelebirrScreen(phoneNumber: contactValue),
+        // Both email and phone sign-ups continue through the onboarding chain:
+        // Telebirr connect -> connection success -> KYC profile -> dashboard.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (_) => ConnectTelebirrScreen(
+              phoneNumber: isEmail ? '' : contactValue,
             ),
-            (route) => false,
-          );
-        }
+          ),
+          (route) => false,
+        );
         return;
       }
 

@@ -39,6 +39,14 @@ dependencies:
   supabase_flutter: ^1.5.0
   flutter_dotenv: ^5.1.0
   postgres: ^3.5.5
+  http: ^1.2.2
+
+# supabase_flutter caps sign_in_with_apple at <6.0.0, but 5.x still references the
+# removed Flutter v1 Android embedding (PluginRegistry.Registrar) and fails to
+# compile on modern Flutter. We don't use Apple Sign-In directly, so override to a
+# 6.x that dropped the v1 embedding to unblock the Android build.
+dependency_overrides:
+  sign_in_with_apple: ^6.0.0
 
 dev_dependencies:
   flutter_test:
