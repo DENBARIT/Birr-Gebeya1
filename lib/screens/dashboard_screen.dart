@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../theme/design_system.dart';
 import '../models/app_state.dart';
 import '../models/investment_pool.dart';
+import 'chatbot_screen.dart';
 import 'invest_detail_screen.dart';
 import 'portfolio_screen.dart';
 import 'notifications_screen.dart';
@@ -47,6 +48,17 @@ class AppNavigationShellState extends State<AppNavigationShell> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const ChatbotScreen()),
+          );
+        },
+        backgroundColor: BirrTheme.primary,
+        foregroundColor: Colors.white,
+        icon: const Icon(Icons.auto_awesome),
+        label: const Text('Ask AI'),
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,

@@ -292,4 +292,48 @@ class AppState extends ChangeNotifier {
       // Keep local state even if the network write fails.
     }
   }
+
+  /// Builds a plain-text snapshot of the live pools and the user's holdings,
+  /// used as context for the AI investment advisor.
+  String buildAdvisorContext() {
+    final buffer = StringBuffer();
+    buffer.writeln('USER PROFILE');
+    buffer.writeln('- Name: $userName');
+    if (region != null) buffer.writeln('- Region: $region');
+    buffer.writeln(
+      '- Telebirr wallet connected: ${isTelebirrConnected ? "yes" : "no"}',
+    );
+    buffer.writeln();
+
+    buffer.writeln('AVAILABLE T-BILL POOLS (the user can invest in these):');
+    for (final p in pools) {
+      buffer.writeln(
+        '- ${p.title}: ${p.yieldRate.toStringAsFixed(1)}% p.a., '
+        '${p.termInDays}-day term, type ${p.type}, '
+        'min ETB ${p.minInvestment.toStringAsFixed(0)}, '
+        '${(p.progress * 100).toStringAsFixed(0)}% funded',
+      );
+    }
+    buffer.writeln();
+
+    buffer.writeln('USER CURRENT HOLDINGS:');
+    if (holdings.isEmpty) {
+      buffer.writeln('- (none yet — the user has not invested)');
+    } else {
+      for (final h in holdings) {
+        buffer.writeln(
+          '- ${h.title}: invested ETB ${h.investedAmount.toStringAsFixed(0)}, '
+          'expected return ETB ${h.expectedReturn.toStringAsFixed(0)}, '
+          '${h.yieldRate.toStringAsFixed(1)}% p.a., '
+          '${h.daysRemaining} of ${h.termInDays} days remaining',
+        );
+      }
+      buffer.writeln(
+        'Totals: invested ETB ${totalInvested.toStringAsFixed(0)}, '
+        'expected return ETB ${expectedReturn.toStringAsFixed(0)}, '
+        'next maturity in $nextMaturityDays days.',
+      );
+    }
+    return buffer.toString();
+  }
 }
