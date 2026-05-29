@@ -356,38 +356,152 @@ class DashboardScreen extends StatelessWidget {
                   )
                 else
                   ...appState.holdings.map(
-                    (h) => Container(
-                      margin: const EdgeInsets.only(bottom: 10),
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: BirrTheme.surface,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            h.title,
-                            style: BirrTheme.getHeadlineMd(
-                              context,
-                            ).copyWith(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'ETB ${h.investedAmount.toStringAsFixed(0)} • ${h.termInDays} days',
-                            style: BirrTheme.getBodyMd(
-                              context,
-                            ).copyWith(color: BirrTheme.onSurfaceVariant),
-                          ),
-                        ],
-                      ),
-                    ),
+                    (h) => _HoldingCard(holding: h),
                   ),
               ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A distinct, informative card for a single holding — shows the pool it belongs
+/// to, its own yield, invested amount, expected return and maturity progress.
+class _HoldingCard extends StatelessWidget {
+  final Holding holding;
+
+  const _HoldingCard({required this.holding});
+
+  @override
+  Widget build(BuildContext context) {
+    final elapsed = holding.termInDays - holding.daysRemaining;
+    final progress = holding.termInDays == 0
+        ? 0.0
+        : (elapsed / holding.termInDays).clamp(0.0, 1.0);
+    final isMatured = holding.daysRemaining <= 0;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: BirrTheme.surfaceContainerLowest,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: BirrTheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Title + yield badge
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  holding.title,
+                  style: BirrTheme.getHeadlineMd(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: BirrTheme.primary.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  '${holding.yieldRate.toStringAsFixed(1)}% p.a.',
+                  style: BirrTheme.getLabelBold(
+                    context,
+                  ).copyWith(color: BirrTheme.primary),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Invested + expected return
+          Row(
+            children: [
+              Expanded(
+                child: _HoldingStat(
+                  label: 'Invested',
+                  value: 'ETB ${holding.investedAmount.toStringAsFixed(0)}',
+                ),
+              ),
+              Expanded(
+                child: _HoldingStat(
+                  label: 'Expected return',
+                  value: 'ETB ${holding.expectedReturn.toStringAsFixed(0)}',
+                  valueColor: BirrTheme.primary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          // Maturity progress
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 6,
+              backgroundColor: BirrTheme.surfaceContainerHighest,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                BirrTheme.primary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            isMatured
+                ? 'Matured • ${holding.termInDays}-day term complete'
+                : '${holding.daysRemaining} of ${holding.termInDays} days remaining',
+            style: BirrTheme.getLabelMd(
+              context,
+            ).copyWith(color: BirrTheme.onSurfaceVariant),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HoldingStat extends StatelessWidget {
+  final String label;
+  final String value;
+  final Color? valueColor;
+
+  const _HoldingStat({
+    required this.label,
+    required this.value,
+    this.valueColor,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: BirrTheme.getLabelMd(
+            context,
+          ).copyWith(color: BirrTheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: BirrTheme.getBodyMd(context).copyWith(
+            fontWeight: FontWeight.w700,
+            color: valueColor ?? BirrTheme.onSurface,
+          ),
+        ),
+      ],
     );
   }
 }

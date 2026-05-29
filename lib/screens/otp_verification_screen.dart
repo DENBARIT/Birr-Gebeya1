@@ -28,11 +28,11 @@ class OtpVerificationScreen extends StatefulWidget {
     required this.email,
     required this.contactValue,
     required this.channel,
-    required this.initialOtp,
-    required this.authEmail,
-    required this.password,
-    required this.isPasswordReset,
     required this.purpose,
+    this.initialOtp = '',
+    this.authEmail = '',
+    this.password = '',
+    this.isPasswordReset = false,
     this.autoFillOtp = false,
     this.onVerifyOtp,
     this.onResendOtp,
@@ -134,6 +134,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 ? widget.phoneNumber
                 : widget.contactValue);
 
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('A new verification code has been sent to $sentTo'),

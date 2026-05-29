@@ -1,11 +1,11 @@
 {
-    "name": "birr_gebeya",
-    "short_name": "birr_gebeya",
+    "name": "Birr Gebeya",
+    "short_name": "Birr Gebeya",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#005440",
+    "theme_color": "#005440",
+    "description": "Grow your money with Ethiopian Treasury Bills.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
