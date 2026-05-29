@@ -1,7 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../services/auth_service.dart';
 import '../theme/design_system.dart';
+
+/// What the entered code is being verified for.
+enum OtpPurpose { signup, recovery, sms }
 
 class OtpVerificationScreen extends StatefulWidget {
   final String phoneNumber;
@@ -43,10 +47,12 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     6,
     (_) => TextEditingController(),
   );
+  final AuthService _auth = AuthService();
 
   int _secondsRemaining = 45;
   Timer? _timer;
   bool _canResend = false;
+  bool _isVerifying = false;
 
   @override
   void initState() {
@@ -92,10 +98,28 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     });
   }
 
-  void _resendCode() {
-    if (_canResend) {
-      if (widget.onResendOtp != null) {
-        widget.onResendOtp!();
+  String get _collectedOtp => _controllers.map((c) => c.text).join();
+
+  void _showError(String message) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: BirrTheme.error),
+    );
+  }
+
+  Future<void> _resendCode() async {
+    if (!_canResend) return;
+    try {
+      switch (widget.purpose) {
+        case OtpPurpose.signup:
+          await _auth.resendEmailSignupOtp(email: widget.email);
+          break;
+        case OtpPurpose.recovery:
+          await _auth.sendPasswordResetOtp(email: widget.email);
+          break;
+        case OtpPurpose.sms:
+          await _auth.resendSmsOtp(phone: widget.phoneNumber);
+          break;
       }
       _startTimer();
       final fallbackEmail = dotenv.env['TEST_OTP_EMAIL'] ?? '';
@@ -115,40 +139,54 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
           backgroundColor: BirrTheme.primaryContainer,
         ),
       );
+    } on AuthException catch (e) {
+      _showError(e.message);
+    } catch (e) {
+      _showError('Could not resend the code. Please try again.');
     }
   }
 
   Future<void> _verify() async {
-    String otp = '';
-    for (var controller in _controllers) {
-      otp += controller.text;
-    }
+    if (_isVerifying) return;
 
+    final otp = _collectedOtp;
     if (otp.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Please enter all 6 digits of the verification code'),
-          backgroundColor: BirrTheme.error,
-        ),
-      );
+      _showError('Please enter all 6 digits of the verification code');
       return;
     }
 
-    if (widget.onVerifyOtp != null) {
-      final valid = await widget.onVerifyOtp!(otp);
-      if (!mounted) return;
-      if (!valid) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('The verification code is invalid or expired.'),
-            backgroundColor: BirrTheme.error,
-          ),
-        );
-        return;
+    setState(() => _isVerifying = true);
+    try {
+      switch (widget.purpose) {
+        case OtpPurpose.signup:
+          await _auth.verifyEmailSignup(email: widget.email, token: otp);
+          break;
+        case OtpPurpose.recovery:
+          await _auth.verifyPasswordReset(email: widget.email, token: otp);
+          break;
+        case OtpPurpose.sms:
+          await _auth.verifySmsOtp(phone: widget.phoneNumber, token: otp);
+          break;
       }
+      // Verified — a real session now exists.
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } on AuthException catch (e) {
+      _showError(e.message);
+      _clearInputs();
+    } catch (e) {
+      _showError('Verification failed. Please check the code and try again.');
+      _clearInputs();
+    } finally {
+      if (mounted) setState(() => _isVerifying = false);
     }
+  }
 
-    Navigator.of(context).pop(true);
+  void _clearInputs() {
+    for (final c in _controllers) {
+      c.clear();
+    }
+    if (_focusNodes.isNotEmpty) _focusNodes.first.requestFocus();
   }
 
   @override
@@ -210,7 +248,8 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
               ),
               const SizedBox(height: 8.0),
               Text(
-                'Sent to $displayContact',
+                'We sent a 6-digit code to $displayContact',
+                textAlign: TextAlign.center,
                 style: BirrTheme.getBodyMd(
                   context,
                 ).copyWith(color: BirrTheme.onSurfaceVariant),
@@ -228,6 +267,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                       keyboardType: TextInputType.number,
                       textAlign: TextAlign.center,
                       maxLength: 1,
+                      enabled: !_isVerifying,
                       style: BirrTheme.getHeadlineMd(
                         context,
                       ).copyWith(fontWeight: FontWeight.bold),
@@ -287,7 +327,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                   const SizedBox(height: 6.0),
                   TextButton(
-                    onPressed: _canResend ? _resendCode : null,
+                    onPressed: _canResend && !_isVerifying ? _resendCode : null,
                     style: TextButton.styleFrom(
                       foregroundColor: BirrTheme.secondary,
                     ),
@@ -310,7 +350,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
-                  onPressed: _verify,
+                  onPressed: _isVerifying ? null : _verify,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: BirrTheme.primary,
                     foregroundColor: Colors.white,
@@ -319,13 +359,23 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: Text(
-                    'Verify',
-                    style: BirrTheme.getHeadlineMdMobile(context).copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  child: _isVerifying
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.4,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(
+                          'Verify',
+                          style: BirrTheme.getHeadlineMdMobile(context)
+                              .copyWith(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                              ),
+                        ),
                 ),
               ),
               const SizedBox(height: 16.0),

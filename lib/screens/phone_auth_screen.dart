@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'package:supabase_flutter/supabase_flutter.dart';
+
 import '../models/app_state.dart';
-import '../services/email_otp_service.dart';
+import '../services/auth_service.dart';
 import '../services/supabase_app_repository.dart';
 import '../theme/design_system.dart';
 import '../widgets/brand_logo.dart';
@@ -30,7 +32,7 @@ class PhoneAuthScreen extends StatefulWidget {
 }
 
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
-  final EmailOtpService _emailOtpService = EmailOtpService();
+  final AuthService _auth = AuthService();
   final SupabaseAppRepository _appRepository = SupabaseAppRepository();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
@@ -116,58 +118,33 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           return;
         }
 
-        final purpose = _authMethod == AuthMethod.email
-            ? 'sign_up'
-            : 'sign_up_phone';
-        final dispatchResult = _authMethod == AuthMethod.email
-            ? await _emailOtpService.sendOtpEmail(
-                email: contactValue,
-                purpose: purpose,
-              )
-            : null;
+        final isEmail = _authMethod == AuthMethod.email;
+        final e164Phone = contactValue.replaceAll(' ', '');
 
-        if (dispatchResult != null && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(dispatchResult.message),
-              backgroundColor: BirrTheme.primary,
-            ),
+        if (isEmail) {
+          await _auth.sendEmailSignupOtp(
+            email: contactValue,
+            password: _passwordController.text.trim(),
           );
+        } else {
+          await _auth.sendSmsOtp(phone: e164Phone);
         }
 
         if (!mounted) return;
         final otpResult = await Navigator.of(context).push<bool?>(
           MaterialPageRoute(
             builder: (_) => OtpVerificationScreen(
-              phoneNumber: _authMethod == AuthMethod.phone ? contactValue : '',
-              email: _authMethod == AuthMethod.email ? contactValue : '',
+              phoneNumber: isEmail ? '' : e164Phone,
+              email: isEmail ? contactValue : '',
               contactValue: contactValue,
-              channel: _authMethod == AuthMethod.email ? 'email' : 'phone',
-              initialOtp: dispatchResult?.demoOtp ?? '',
-              authEmail: contactValue,
-              password: _passwordController.text.trim(),
-              isPasswordReset: false,
-              otpPurpose: purpose,
-              onVerifyOtp: _authMethod == AuthMethod.email
-                  ? (otp) => _emailOtpService.verifyOtp(
-                      email: contactValue,
-                      purpose: purpose,
-                      otp: otp,
-                    )
-                  : null,
-              onResendOtp: _authMethod == AuthMethod.email
-                  ? () => _emailOtpService.sendOtpEmail(
-                      email: contactValue,
-                      purpose: purpose,
-                    )
-                  : null,
-              autoFillOtp: dispatchResult?.isDemoMode ?? false,
+              channel: isEmail ? 'email' : 'phone',
+              purpose: isEmail ? OtpPurpose.signup : OtpPurpose.sms,
             ),
           ),
         );
 
         if (otpResult != true) {
-          setState(() => _isSubmitting = false);
+          if (mounted) setState(() => _isSubmitting = false);
           return;
         }
 
@@ -176,25 +153,21 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         await appState.updateProfile(
           userName: _buildDisplayName(contactValue),
           fullNameValue: _buildDisplayName(contactValue),
-          telebirrNumberValue: _authMethod == AuthMethod.phone
-              ? contactValue
-              : null,
-          email: _authMethod == AuthMethod.email ? contactValue : null,
-          phoneNumber: _authMethod == AuthMethod.phone ? contactValue : null,
+          telebirrNumberValue: isEmail ? null : contactValue,
+          email: isEmail ? contactValue : null,
+          phoneNumber: isEmail ? null : contactValue,
         );
 
         if (!mounted) return;
-        if (_authMethod == AuthMethod.phone) {
+        if (isEmail) {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute(
-              builder: (_) => ConnectTelebirrScreen(phoneNumber: contactValue),
-            ),
+            MaterialPageRoute(builder: (_) => const AppNavigationShell()),
             (route) => false,
           );
         } else {
           Navigator.of(context).pushAndRemoveUntil(
             MaterialPageRoute(
-              builder: (_) => const ConnectTelebirrScreen(phoneNumber: ''),
+              builder: (_) => ConnectTelebirrScreen(phoneNumber: contactValue),
             ),
             (route) => false,
           );
@@ -203,59 +176,53 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       }
 
       if (_authAction == AuthAction.resetPassword) {
-        final purpose = 'reset_password';
-        final dispatchResult = await _emailOtpService.sendOtpEmail(
-          email: _emailController.text.trim(),
-          purpose: purpose,
-        );
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(dispatchResult.message),
-              backgroundColor: BirrTheme.primary,
-            ),
-          );
-        }
+        final email = _emailController.text.trim();
+        await _auth.sendPasswordResetOtp(email: email);
+
         if (!mounted) return;
         final otpResult = await Navigator.of(context).push<bool?>(
           MaterialPageRoute(
             builder: (_) => OtpVerificationScreen(
               phoneNumber: '',
-              email: _emailController.text.trim(),
-              contactValue: _emailController.text.trim(),
+              email: email,
+              contactValue: email,
               channel: 'email',
-              initialOtp: dispatchResult.demoOtp ?? '',
-              authEmail: _emailController.text.trim(),
-              password: '',
-              isPasswordReset: true,
-              otpPurpose: purpose,
-              onVerifyOtp: (otp) => _emailOtpService.verifyOtp(
-                email: _emailController.text.trim(),
-                purpose: purpose,
-                otp: otp,
-              ),
-              onResendOtp: () => _emailOtpService.sendOtpEmail(
-                email: _emailController.text.trim(),
-                purpose: purpose,
-              ),
-              autoFillOtp: dispatchResult.isDemoMode,
+              purpose: OtpPurpose.recovery,
             ),
           ),
         );
 
-        if (otpResult == true && mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Password updated successfully. Please sign in.'),
-              backgroundColor: BirrTheme.primary,
-            ),
-          );
-          _backToSignIn();
+        if (otpResult != true) {
+          if (mounted) setState(() => _isSubmitting = false);
+          return;
         }
+
+        if (!mounted) return;
+        final newPassword = await _promptNewPassword();
+        if (newPassword == null) {
+          if (mounted) setState(() => _isSubmitting = false);
+          return;
+        }
+
+        await _auth.updatePassword(newPassword: newPassword);
+        await _auth.signOut();
+
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Password updated successfully. Please sign in.'),
+            backgroundColor: BirrTheme.primary,
+          ),
+        );
+        _backToSignIn();
         return;
       }
 
-      // Sign in (mock)
+      await _auth.signInWithPassword(
+        email: contactValue,
+        password: _passwordController.text.trim(),
+      );
+
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -264,13 +231,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         ),
       );
 
-      await Future.delayed(const Duration(milliseconds: 300));
-      if (!mounted) return;
       await context.read<AppState>().refreshFromSupabase();
       if (!mounted) return;
       Navigator.of(context).pushAndRemoveUntil(
         MaterialPageRoute(builder: (_) => const AppNavigationShell()),
         (route) => false,
+      );
+    } on AuthException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(error.message),
+          backgroundColor: BirrTheme.error,
+        ),
       );
     } catch (error) {
       if (!mounted) return;
@@ -283,6 +256,64 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  Future<String?> _promptNewPassword() {
+    final controller = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool obscure = true;
+
+    return showDialog<String>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return AlertDialog(
+              title: const Text('Set a new password'),
+              content: Form(
+                key: formKey,
+                child: TextFormField(
+                  controller: controller,
+                  obscureText: obscure,
+                  autofocus: true,
+                  validator: (value) {
+                    final password = value?.trim() ?? '';
+                    if (password.length < 6) {
+                      return 'Password must be at least 6 characters';
+                    }
+                    return null;
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'New password',
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        obscure ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () => setLocalState(() => obscure = !obscure),
+                    ),
+                  ),
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () {
+                    if (formKey.currentState!.validate()) {
+                      Navigator.of(dialogContext).pop(controller.text.trim());
+                    }
+                  },
+                  child: const Text('Update'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
   }
 
   Widget _buildSegmentedButton({
@@ -322,7 +353,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               const SizedBox(width: 6),
               Text(
                 label,
-                style: BirrTheme.getLabelBold(null).copyWith(
+                style: BirrTheme.getLabelBold(context).copyWith(
                   color: selected ? Colors.white : BirrTheme.onSurfaceVariant,
                 ),
               ),
@@ -445,6 +476,54 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                     ),
                   ],
                   const SizedBox(height: 32.0),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [Colors.white, BirrTheme.surfaceContainerLow],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: BirrTheme.outlineVariant),
+                      boxShadow: [
+                        BoxShadow(
+                          color: BirrTheme.primary.withValues(alpha: 0.05),
+                          blurRadius: 24,
+                          offset: const Offset(0, 12),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          _authAction == AuthAction.signIn
+                              ? 'Welcome back'
+                              : _authAction == AuthAction.resetPassword
+                              ? 'Secure your account'
+                              : 'Create your account',
+                          style: BirrTheme.getLabelBold(
+                            context,
+                          ).copyWith(color: BirrTheme.secondary),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          _authAction == AuthAction.signIn
+                              ? 'Use the logo-inspired sign-in flow with a polished, calm experience.'
+                              : _authAction == AuthAction.resetPassword
+                              ? 'We will verify your email and help you set a new password.'
+                              : 'Join Birr Gebeya and verify your profile in a few quick steps.',
+                          style: BirrTheme.getBodyMd(context).copyWith(
+                            color: BirrTheme.onSurfaceVariant,
+                            height: 1.45,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20.0),
                   if (_authAction == AuthAction.signUp) ...[
                     const SizedBox(height: 16.0),
                     Text(
@@ -467,15 +546,17 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             selected: _authMethod == AuthMethod.phone,
                             icon: Icons.phone_android,
                             label: 'Mobile Number',
-                            onTap: () =>
-                                setState(() => _authMethod = AuthMethod.phone),
+                            onTap: () {
+                              setState(() => _authMethod = AuthMethod.phone);
+                            },
                           ),
                           _buildSegmentedButton(
                             selected: _authMethod == AuthMethod.email,
                             icon: Icons.alternate_email,
                             label: 'Email',
-                            onTap: () =>
-                                setState(() => _authMethod = AuthMethod.email),
+                            onTap: () {
+                              setState(() => _authMethod = AuthMethod.email);
+                            },
                           ),
                         ],
                       ),
@@ -492,6 +573,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   if (_authAction == AuthAction.signUp &&
                       _authMethod == AuthMethod.phone)
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Container(
                           height: 56,
@@ -517,12 +599,15 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             keyboardType: TextInputType.phone,
                             maxLength: 9,
                             validator: (value) {
-                              if (value == null || value.isEmpty)
+                              if (value == null || value.isEmpty) {
                                 return 'Please enter your phone number';
-                              if (value.length < 9)
+                              }
+                              if (value.length < 9) {
                                 return 'Enter a valid 9-digit number';
-                              if (!value.startsWith('9'))
+                              }
+                              if (!value.startsWith('9')) {
                                 return 'Should start with 9';
+                              }
                               return null;
                             },
                             style: BirrTheme.getBodyLg(
@@ -540,9 +625,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                           ),
                         ),
                       ],
-                    ),
-                  if (!(_authAction == AuthAction.signUp &&
-                      _authMethod == AuthMethod.phone))
+                    )
+                  else
                     TextFormField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
@@ -553,8 +637,9 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         final emailRegex = RegExp(
                           r'^[^@\s]+@[^@\s]+\.[^@\s]+$',
                         );
-                        if (!emailRegex.hasMatch(email))
+                        if (!emailRegex.hasMatch(email)) {
                           return 'Please enter a valid email address';
+                        }
                         return null;
                       },
                       style: BirrTheme.getBodyLg(
@@ -569,7 +654,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         hintStyle: TextStyle(color: Color(0x993F4944)),
                       ),
                     ),
-
                   const SizedBox(height: 16.0),
                   if (_authAction != AuthAction.resetPassword) ...[
                     Text(
@@ -584,10 +668,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       obscureText: _obscurePassword,
                       validator: (value) {
                         final password = value?.trim() ?? '';
-                        if (password.isEmpty)
+                        if (password.isEmpty) {
                           return 'Please enter your password';
-                        if (password.length < 6)
+                        }
+                        if (password.length < 6) {
                           return 'Password must be at least 6 characters';
+                        }
                         return null;
                       },
                       style: BirrTheme.getBodyLg(
@@ -607,15 +693,16 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                                 : Icons.visibility,
                             color: BirrTheme.onSurfaceVariant,
                           ),
-                          onPressed: () => setState(
-                            () => _obscurePassword = !_obscurePassword,
-                          ),
+                          onPressed: () {
+                            setState(
+                              () => _obscurePassword = !_obscurePassword,
+                            );
+                          },
                         ),
                       ),
                     ),
                     const SizedBox(height: 16.0),
                   ],
-
                   Row(
                     children: [
                       const Icon(
@@ -638,7 +725,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 24.0),
                   SizedBox(
                     width: double.infinity,
@@ -676,7 +762,6 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                     ),
                   ),
-
                   const SizedBox(height: 16.0),
                   if (_authAction == AuthAction.signUp)
                     Center(

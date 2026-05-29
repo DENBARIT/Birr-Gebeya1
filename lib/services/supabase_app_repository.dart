@@ -42,6 +42,7 @@ class SupabaseAppRepository {
 
   Future<bool> saveProfile({
     required String userName,
+    String? fullName,
     String? telebirrNumber,
     String? email,
     String? phoneNumber,
@@ -52,6 +53,7 @@ class SupabaseAppRepository {
     final record = {
       'id': user.id,
       'username': userName,
+      'full_name': fullName,
       'telebirr_number': telebirrNumber,
       'email': email,
       'phone_number': phoneNumber,
