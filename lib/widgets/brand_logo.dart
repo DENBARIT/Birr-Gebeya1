@@ -16,15 +16,14 @@ class BrandLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final archSize = size * 0.78;
-    final strokeWidth = size * 0.09;
+    final logoSize = size * 0.92;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(
           width: size,
-          height: size * 1.05,
+          height: size,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -41,33 +40,21 @@ class BrandLogo extends StatelessWidget {
                   offset: Offset(0, size * 0.03),
                 ),
               ],
-              CustomPaint(
-                size: Size(archSize, archSize),
-                painter: _ArchPainter(
-                  color: BirrTheme.primaryContainer,
-                  strokeWidth: strokeWidth,
-                ),
+              Image.asset(
+                'lib/assets/Logo.png',
+                width: logoSize,
+                height: logoSize,
+                fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
               ),
               Positioned(
-                bottom: size * 0.01,
+                bottom: size * 0.02,
                 child: Container(
-                  width: size * 0.42,
-                  height: size * 0.16,
+                  width: size * 0.24,
+                  height: size * 0.045,
                   decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        BirrTheme.primaryContainer,
-                        BirrTheme.primary.withValues(alpha: 0.92),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(size * 0.08),
-                    boxShadow: [
-                      BoxShadow(
-                        color: BirrTheme.primary.withValues(alpha: 0.22),
-                        blurRadius: 18,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
+                    color: BirrTheme.primary.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(size * 0.03),
                   ),
                 ),
               ),
