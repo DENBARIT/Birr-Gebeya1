@@ -1,10 +1,34 @@
 import 'package:flutter/material.dart';
+
 import '../theme/design_system.dart';
 import '../widgets/brand_logo.dart';
 import 'phone_auth_screen.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _lineController;
+
+  @override
+  void initState() {
+    super.initState();
+    _lineController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1800),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _lineController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -126,8 +150,22 @@ class SplashScreen extends StatelessWidget {
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const BrandLogo(size: 92, showLabel: false),
-                              const SizedBox(height: 10),
+                              SizedBox(
+                                width: double.infinity,
+                                height: 76,
+                                child: AnimatedBuilder(
+                                  animation: _lineController,
+                                  builder: (context, _) {
+                                    return CustomPaint(
+                                      painter: _ZigZagLinePainter(
+                                        progress: _lineController.value,
+                                        color: BirrTheme.primary,
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                              const SizedBox(height: 14),
                               Text(
                                 'A warmer way to grow savings',
                                 style: BirrTheme.getHeadlineMdMobile(context)
@@ -271,5 +309,75 @@ class _GlowOrb extends StatelessWidget {
         boxShadow: [BoxShadow(color: color, blurRadius: 28, spreadRadius: 6)],
       ),
     );
+  }
+}
+
+class _ZigZagLinePainter extends CustomPainter {
+  final double progress;
+  final Color color;
+
+  const _ZigZagLinePainter({required this.progress, required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final basePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..color = color.withValues(alpha: 0.15);
+
+    final movingPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4.5
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round
+      ..shader = LinearGradient(
+        begin: Alignment.centerLeft,
+        end: Alignment.centerRight,
+        colors: [
+          color.withValues(alpha: 0.05),
+          color,
+          color.withValues(alpha: 0.85),
+          color.withValues(alpha: 0.05),
+        ],
+        stops: [
+          0.0,
+          (progress * 0.45).clamp(0.18, 0.45),
+          (progress * 0.45 + 0.22).clamp(0.38, 0.75),
+          1.0,
+        ],
+      ).createShader(rect);
+
+    Path buildPath(double phaseShift) {
+      final path = Path();
+      final amplitude = size.height * 0.23;
+      final centerY = size.height / 2;
+      const step = 28.0;
+      final startX = -step + phaseShift;
+      var firstPoint = true;
+      for (double x = startX; x <= size.width + step; x += step / 2) {
+        final y = ((x / (step / 2)).floor().isEven
+            ? centerY - amplitude
+            : centerY + amplitude);
+        if (firstPoint) {
+          path.moveTo(x, y);
+          firstPoint = false;
+        } else {
+          path.lineTo(x, y);
+        }
+      }
+      return path;
+    }
+
+    final offset = (progress * 56) % 28;
+    canvas.drawPath(buildPath(0), basePaint);
+    canvas.drawPath(buildPath(offset), movingPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ZigZagLinePainter oldDelegate) {
+    return oldDelegate.progress != progress || oldDelegate.color != color;
   }
 }

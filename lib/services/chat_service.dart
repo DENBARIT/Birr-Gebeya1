@@ -11,17 +11,16 @@ class ChatMessage {
   const ChatMessage({required this.role, required this.text});
 }
 
-/// Talks to the Claude Messages API (raw HTTP — Dart has no official Anthropic
-/// SDK). Powers the in-app investment-advisor chatbot.
+/// Talks to the Gemini GenerateContent API (raw HTTP — Dart has no official
+/// Google Gemini SDK here). Powers the in-app investment-advisor chatbot.
 ///
 /// Security note: this calls the API directly with the key from `.env`, which
 /// is fine for development but ships the key inside the app. For production,
 /// proxy these requests through a backend (e.g. a Supabase Edge Function) so
 /// the key never leaves the server.
 class ChatService {
-  static const String _model = 'claude-opus-4-8';
-  static const String _endpoint = 'https://api.anthropic.com/v1/messages';
-  static const String _apiVersion = '2023-06-01';
+  static const String _model = 'gemini-2.0-flash';
+  static const String _endpointPath = '/v1beta/models/$_model:generateContent';
 
   // Stable, cacheable advisor instructions (no per-user data here, so the
   // prompt-cache prefix stays identical across turns and users).
@@ -56,7 +55,7 @@ Style and rules:
 ''';
 
   bool get isConfigured {
-    final key = dotenv.env['ANTHROPIC_API_KEY'];
+    final key = dotenv.env['GEMINI_API_KEY'];
     return key != null && key.trim().isNotEmpty;
   }
 
@@ -67,30 +66,32 @@ Style and rules:
     required List<ChatMessage> history,
     required String portfolioContext,
   }) async {
-    final apiKey = dotenv.env['ANTHROPIC_API_KEY']?.trim() ?? '';
+    final apiKey = dotenv.env['GEMINI_API_KEY']?.trim() ?? '';
     if (apiKey.isEmpty) {
       throw const ChatException(
-        'The AI advisor is not configured yet. Add ANTHROPIC_API_KEY to your '
+        'The AI advisor is not configured yet. Add GEMINI_API_KEY to your '
         '.env file to enable it.',
       );
     }
 
     final body = jsonEncode({
-      'model': _model,
-      'max_tokens': 1500,
-      // Thinking off keeps chat responses snappy; the system prompt instructs
-      // the model to reply with only its final answer.
-      'thinking': {'type': 'disabled'},
-      'system': [
-        {
-          'type': 'text',
-          'text': _systemInstructions,
-          'cache_control': {'type': 'ephemeral'},
-        },
-        {'type': 'text', 'text': portfolioContext},
-      ],
-      'messages': [
-        for (final m in history) {'role': m.role, 'content': m.text},
+      'systemInstruction': {
+        'parts': [
+          {
+            'text':
+                '$_systemInstructions\n\nCurrent portfolio context:\n$portfolioContext',
+          },
+        ],
+      },
+      'generationConfig': {'maxOutputTokens': 1500, 'temperature': 0.4},
+      'contents': [
+        for (final m in history)
+          {
+            'role': m.role == 'assistant' ? 'model' : 'user',
+            'parts': [
+              {'text': m.text},
+            ],
+          },
       ],
     });
 
@@ -98,12 +99,10 @@ Style and rules:
     try {
       resp = await http
           .post(
-            Uri.parse(_endpoint),
-            headers: {
-              'x-api-key': apiKey,
-              'anthropic-version': _apiVersion,
-              'content-type': 'application/json',
-            },
+            Uri.https('generativelanguage.googleapis.com', _endpointPath, {
+              'key': apiKey,
+            }),
+            headers: {'content-type': 'application/json'},
             body: body,
           )
           .timeout(const Duration(seconds: 60));
@@ -116,11 +115,19 @@ Style and rules:
 
     if (resp.statusCode == 200) {
       final data = jsonDecode(resp.body) as Map<String, dynamic>;
-      final content = (data['content'] as List?) ?? const [];
+      final candidates = (data['candidates'] as List?) ?? const [];
       final buffer = StringBuffer();
-      for (final block in content) {
-        if (block is Map && block['type'] == 'text') {
-          buffer.write(block['text'] ?? '');
+      for (final candidate in candidates) {
+        if (candidate is Map) {
+          final content = candidate['content'];
+          if (content is Map) {
+            final parts = (content['parts'] as List?) ?? const [];
+            for (final block in parts) {
+              if (block is Map && block['text'] != null) {
+                buffer.write(block['text']);
+              }
+            }
+          }
         }
       }
       final text = buffer.toString().trim();
@@ -132,7 +139,7 @@ Style and rules:
     // Map common API errors to friendly messages.
     if (resp.statusCode == 401) {
       throw const ChatException(
-        'The AI advisor key was rejected. Check ANTHROPIC_API_KEY in your .env.',
+        'The AI advisor key was rejected. Check GEMINI_API_KEY in your .env.',
       );
     }
     if (resp.statusCode == 429) {
