@@ -269,7 +269,9 @@ class AppState extends ChangeNotifier {
   }) async {
     this.userName = userName;
     fullName = fullNameValue;
-    telebirrNumber = telebirrNumberValue;
+    // telebirrNumber = telebirrNumberValue;
+    telebirrNumber = telebirrNumberValue ?? telebirrNumber;
+
     nationalId = nationalIdValue;
     dateOfBirth = dateOfBirthValue;
     gender = genderValue;
@@ -284,6 +286,7 @@ class AppState extends ChangeNotifier {
       await SupabaseAppRepository().saveProfile(
         userName: userName,
         fullName: fullName,
+        // telebirrNumber: telebirrNumber,
         telebirrNumber: telebirrNumber,
         email: email,
         phoneNumber: phoneNumber,

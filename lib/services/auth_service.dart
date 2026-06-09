@@ -21,15 +21,44 @@ class AuthService {
   // Sign up (e-mail + password). Supabase sends a confirmation e-mail that
   // contains the 6-digit token ({{ .Token }} in the "Confirm signup" template).
   // ---------------------------------------------------------------------------
+  // Future<void> sendEmailSignupOtp({
+  //   required String email,
+  //   required String password,
+  // }) async {
+  //   try {
+  //     await _ensureNetworkForAuth();
+  //     debugPrint('AuthService.sendEmailSignupOtp: email=$email');
+  //     final res = await _client.auth.signUp(email: email, password: password);
+  //     debugPrint('sendEmailSignupOtp response: ${res.toString()}');
+  //   } on SocketException catch (e, st) {
+  //     _logNetworkError('sendEmailSignupOtp', e, st);
+  //     rethrow;
+  //   } catch (e, st) {
+  //     debugPrint('sendEmailSignupOtp error: $e');
+  //     debugPrint('$st');
+  //     rethrow;
+  //   }
+  // }
+  // ---------------------------------------------------------------------------
+  // Sign up via Email OTP (Passwordless). Supabase sends a confirmation e-mail
+  // containing the 6-digit token.
+  // ---------------------------------------------------------------------------
   Future<void> sendEmailSignupOtp({
     required String email,
     required String password,
+    // Remove the required password field if you want pure OTP workflow
   }) async {
     try {
       await _ensureNetworkForAuth();
       debugPrint('AuthService.sendEmailSignupOtp: email=$email');
-      final res = await _client.auth.signUp(email: email, password: password);
-      debugPrint('sendEmailSignupOtp response: ${res.toString()}');
+
+      // FIX: Replace _client.auth.signUp with signInWithOtp
+      await _client.auth.signInWithOtp(
+        email: email,
+        shouldCreateUser: true, // This allows new users to sign up
+      );
+
+      debugPrint('sendEmailSignupOtp request successfully dispatched.');
     } on SocketException catch (e, st) {
       _logNetworkError('sendEmailSignupOtp', e, st);
       rethrow;
@@ -42,6 +71,21 @@ class AuthService {
 
   /// Verifies the e-mailed sign-up code. Throws [AuthException] on a bad/expired
   /// code. On success a session is created.
+  // Future<AuthResponse> verifyEmailSignup({
+  //   required String email,
+  //   required String token,
+  // }) {
+  //   debugPrint(
+  //     'AuthService.verifyEmailSignup: email=$email tokenLen=${token.length}',
+  //   );
+  //   return _client.auth.verifyOTP(
+  //     email: email,
+  //     token: token,
+  //     type: OtpType.signup,
+  //   );
+  // }
+  /// Verifies the e-mailed sign-up code. Throws [AuthException] on a bad/expired
+  /// code. On success a session is created.
   Future<AuthResponse> verifyEmailSignup({
     required String email,
     required String token,
@@ -52,7 +96,7 @@ class AuthService {
     return _client.auth.verifyOTP(
       email: email,
       token: token,
-      type: OtpType.signup,
+      type: OtpType.email, // FIX: Change OtpType.signup to OtpType.email
     );
   }
 
@@ -142,7 +186,9 @@ class AuthService {
   }) async {
     try {
       await _ensureNetworkForAuth();
-      debugPrint('AuthService.sendPasswordResetOtp: email=$email, redirectTo=$redirectTo');
+      debugPrint(
+        'AuthService.sendPasswordResetOtp: email=$email, redirectTo=$redirectTo',
+      );
       await _client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
     } on SocketException catch (e, st) {
       _logNetworkError('sendPasswordResetOtp', e, st);
