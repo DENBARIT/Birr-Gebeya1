@@ -40,6 +40,8 @@ dependencies:
   flutter_dotenv: ^5.1.0
   postgres: ^3.5.5
   http: ^1.2.2
+  mailer: ^6.3.0
+  video_player: ^2.9.2
 
 # supabase_flutter caps sign_in_with_apple at <6.0.0, but 5.x still references the
 # removed Flutter v1 Android embedding (PluginRegistry.Registrar) and fails to
@@ -75,6 +77,7 @@ flutter:
   assets:
     - .env
     - lib/assets/Logo.png
+    - lib/assets/video.mp4
 
   # Launcher icon configuration (generates Android & iOS launcher icons)
   # See https://pub.dev/packages/flutter_launcher_icons

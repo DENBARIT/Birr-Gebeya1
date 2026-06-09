@@ -194,6 +194,11 @@ class AuthService {
 
   Future<void> _ensureNetworkForAuth() async {
     final host = Uri.parse(_client.rest.url).host;
+    // InternetAddress.lookup is not supported on web builds. Skip DNS
+    // lookup for web; let the HTTP request fail naturally if there's a
+    // connectivity issue.
+    if (kIsWeb) return;
+
     try {
       await InternetAddress.lookup(host);
     } on SocketException catch (e) {

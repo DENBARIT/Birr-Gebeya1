@@ -1,127 +1,113 @@
-import 'dart:math';
-
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Result returned after attempting to dispatch an OTP to the user's e-mail.
+///
+/// [isDemoMode] is always false when using the Supabase-native flow — the
+/// code is generated and delivered entirely by Supabase via your configured
+/// SMTP provider.
 class OtpDispatchResult {
   final String email;
   final String purpose;
   final String message;
+
+  /// Always false in the Supabase-native flow. Kept for API compatibility.
   final bool isDemoMode;
+
+  /// Always null in the Supabase-native flow.
   final String? demoOtp;
 
   const OtpDispatchResult({
     required this.email,
     required this.purpose,
     required this.message,
-    required this.isDemoMode,
+    this.isDemoMode = false,
     this.demoOtp,
   });
 }
 
+/// Handles e-mail OTP dispatch and verification via **Supabase Auth**.
+///
+/// Sending:
+///   Uses [SupabaseClient.auth.signInWithOtp] which triggers Supabase to send
+///   a 6-digit code through your project's configured SMTP provider.
+///
+/// Verifying:
+///   Uses [SupabaseClient.auth.verifyOTP] with [OtpType.email] to validate the
+///   code entered by the user and establish a session.
 class EmailOtpService {
   EmailOtpService({SupabaseClient? client})
     : _client = client ?? Supabase.instance.client;
 
-  static final Map<String, String> _demoOtpCache = <String, String>{};
-
   final SupabaseClient _client;
 
-  String _cacheKey({required String email, required String purpose}) {
-    return '${purpose.trim().toLowerCase()}|${email.trim().toLowerCase()}';
-  }
-
-  String _generateOtp() {
-    final random = Random.secure();
-    return (100000 + random.nextInt(900000)).toString();
-  }
-
+  /// Sends a 6-digit OTP to [email] via Supabase Auth (SMTP).
+  ///
+  /// [shouldCreateUser] controls whether Supabase creates a new user row if the
+  /// e-mail is not yet registered (defaults to true for the sign-up flow).
   Future<OtpDispatchResult> sendOtpEmail({
     required String email,
     required String purpose,
+    bool shouldCreateUser = true,
   }) async {
     final normalizedEmail = email.trim();
-    final otp = _generateOtp();
-    final functionName = dotenv.env['OTP_EMAIL_FUNCTION_NAME']?.trim();
+    debugPrint(
+      'EmailOtpService.sendOtpEmail: email=$normalizedEmail purpose=$purpose',
+    );
 
-    if (functionName != null && functionName.isNotEmpty) {
-      try {
-        await _client.functions.invoke(
-          functionName,
-          body: <String, dynamic>{
-            'email': normalizedEmail,
-            'otp': otp,
-            'purpose': purpose,
-          },
-        );
-
-        _demoOtpCache.remove(
-          _cacheKey(email: normalizedEmail, purpose: purpose),
-        );
-        return OtpDispatchResult(
-          email: normalizedEmail,
-          purpose: purpose,
-          message: 'Verification code sent to $normalizedEmail.',
-          isDemoMode: false,
-        );
-      } catch (_) {
-        // Fall back to local demo mode if the backend function is not available yet.
-      }
-    }
-
-    if (functionName == null || functionName.isEmpty) {
-      _demoOtpCache[_cacheKey(email: normalizedEmail, purpose: purpose)] = otp;
+    try {
+      await _client.auth.signInWithOtp(
+        email: normalizedEmail,
+        shouldCreateUser: shouldCreateUser,
+      );
+      debugPrint('EmailOtpService: OTP email sent via Supabase SMTP');
       return OtpDispatchResult(
         email: normalizedEmail,
         purpose: purpose,
-        message:
-            'Email backend is not configured, so a demo code was generated locally.',
-        isDemoMode: true,
-        demoOtp: otp,
+        message: 'Verification code sent to $normalizedEmail.',
+        isDemoMode: false,
       );
+    } on AuthException catch (e, st) {
+      debugPrint('EmailOtpService: AuthException sending OTP: $e');
+      debugPrint('$st');
+      rethrow;
+    } catch (e, st) {
+      debugPrint('EmailOtpService: unexpected error sending OTP: $e');
+      debugPrint('$st');
+      rethrow;
     }
-
-    _demoOtpCache[_cacheKey(email: normalizedEmail, purpose: purpose)] = otp;
-    return OtpDispatchResult(
-      email: normalizedEmail,
-      purpose: purpose,
-      message: 'Demo verification code generated for $normalizedEmail.',
-      isDemoMode: true,
-      demoOtp: otp,
-    );
   }
 
+  /// Verifies the 6-digit [otp] code for [email] using Supabase Auth.
+  ///
+  /// Returns `true` and establishes a Supabase session on success.
+  /// Throws [AuthException] if the code is invalid or expired.
   Future<bool> verifyOtp({
     required String email,
     required String purpose,
     required String otp,
   }) async {
     final normalizedEmail = email.trim();
-    final functionName = dotenv.env['OTP_VERIFY_FUNCTION_NAME']?.trim();
+    debugPrint(
+      'EmailOtpService.verifyOtp: email=$normalizedEmail purpose=$purpose',
+    );
 
-    if (functionName != null && functionName.isNotEmpty) {
-      try {
-        final response = await _client.functions.invoke(
-          functionName,
-          body: <String, dynamic>{
-            'email': normalizedEmail,
-            'otp': otp,
-            'purpose': purpose,
-          },
-        );
-
-        final data = response.data;
-        if (data is Map && data['valid'] is bool) {
-          return data['valid'] as bool;
-        }
-        return true;
-      } catch (_) {
-        return false;
-      }
+    try {
+      await _client.auth.verifyOTP(
+        email: normalizedEmail,
+        token: otp,
+        type: OtpType.email,
+      );
+      debugPrint('EmailOtpService: OTP verified successfully');
+      return true;
+    } on AuthException catch (e, st) {
+      debugPrint('EmailOtpService: OTP verification failed: $e');
+      debugPrint('$st');
+      return false;
+    } catch (e, st) {
+      debugPrint('EmailOtpService: unexpected error verifying OTP: $e');
+      debugPrint('$st');
+      return false;
     }
-
-    final cachedOtp =
-        _demoOtpCache[_cacheKey(email: normalizedEmail, purpose: purpose)];
-    return cachedOtp != null && cachedOtp == otp;
   }
 }
