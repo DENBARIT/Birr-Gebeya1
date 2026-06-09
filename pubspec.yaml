@@ -30,7 +30,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
+  # Add the dotLottie dependency here
+  dotlottie_flutter: ^0.1.3
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
@@ -74,9 +75,14 @@ flutter:
 
   # The .env file must be declared as an asset so flutter_dotenv can load it
   # at runtime via dotenv.load().
+  # The .env file must be declared as an asset so flutter_dotenv can load it
+  # at runtime via dotenv.load().
   assets:
     - .env
     - lib/assets/
+    # - lib/assets/Logo.png2
+
+    - assets/investment_animation.lottie
 
   # Launcher icon configuration (generates Android & iOS launcher icons)
   # See https://pub.dev/packages/flutter_launcher_icons

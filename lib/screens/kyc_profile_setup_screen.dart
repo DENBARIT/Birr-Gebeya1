@@ -118,10 +118,11 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
       final name = _nameController.text.trim();
       final email = _emailController.text.trim();
       final nationalId = _nationalIdController.text.trim();
-
+      final appState = Provider.of<AppState>(context, listen: false);
       await Provider.of<AppState>(context, listen: false).updateProfile(
         userName: name,
         fullNameValue: name,
+        telebirrNumberValue: appState.telebirrNumber,
         genderValue: _selectedGender,
         dateOfBirthValue: _selectedDob,
         nationalIdValue: nationalId.isNotEmpty ? nationalId : null,
@@ -338,9 +339,7 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                     value: _selectedRegion,
                     isExpanded: true,
                     items: _ethiopianRegions
-                        .map(
-                          (r) => DropdownMenuItem(value: r, child: Text(r)),
-                        )
+                        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                         .toList(),
                     onChanged: (value) {
                       setState(() {
