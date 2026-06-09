@@ -107,50 +107,48 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         'Auth submit: action=$_authAction method=$_authMethod contact=$contactValue',
       );
       if (_authAction == AuthAction.signUp) {
-        final userExists = _authMethod == AuthMethod.email
+        // Check 1: profiles table (covers fully-onboarded users).
+        final profileExists = _authMethod == AuthMethod.email
             ? await _appRepository.profileExistsByEmail(contactValue)
             : await _appRepository.profileExistsByPhoneNumber(contactValue);
 
-        if (userExists) {
+        // Check 2 (email only): Supabase auth.users — catches users who
+        // verified their OTP but never completed onboarding, so they have
+        // no profiles row yet.
+        final authExists = (!profileExists && _authMethod == AuthMethod.email)
+            ? await _appRepository.emailExistsInAuth(contactValue)
+            : false;
+
+        if (profileExists || authExists) {
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('User already existed'),
-              backgroundColor: BirrTheme.error,
-            ),
-          );
+          setState(() => _isSubmitting = false);
+          await _showAlreadyRegisteredDialog(contactValue);
           return;
         }
 
         final isEmail = _authMethod == AuthMethod.email;
         final e164Phone = contactValue.replaceAll(' ', '');
-        final password = _passwordController.text.trim();
 
-        // For email sign-up, send a verification code to the user's e-mail
-        // via SMTP (or Supabase function if configured), then verify it.
+        // For email sign-up, Supabase sends a 6-digit code via your configured
+        // SMTP provider. No custom SMTP or demo mode needed.
         final emailOtp = EmailOtpService();
-        OtpDispatchResult dispatchResult = OtpDispatchResult(
-          email: contactValue,
-          purpose: 'signup',
-          message: 'Demo code generated',
-          isDemoMode: true,
-        );
 
         if (isEmail) {
-          dispatchResult = await emailOtp.sendOtpEmail(
+          final dispatchResult = await emailOtp.sendOtpEmail(
             email: contactValue,
             purpose: 'signup',
+            shouldCreateUser: true,
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(dispatchResult.message),
+              backgroundColor: BirrTheme.primary,
+            ),
           );
         }
 
         if (!mounted) return;
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(dispatchResult.message),
-            backgroundColor: dispatchResult.isDemoMode ? Colors.orange : BirrTheme.primary,
-          ),
-        );
 
         final otpResult = await Navigator.of(context).push<bool?>(
           MaterialPageRoute(
@@ -160,30 +158,24 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               contactValue: contactValue,
               channel: isEmail ? 'email' : 'phone',
               purpose: isEmail ? OtpPurpose.signup : OtpPurpose.sms,
-              initialOtp: dispatchResult.isDemoMode ? (dispatchResult.demoOtp ?? '') : '',
-              autoFillOtp: dispatchResult.isDemoMode,
-              // On confirm: validate via EmailOtpService, then create the user.
+              // Supabase sends the real code — no demo/autofill.
+              initialOtp: '',
+              autoFillOtp: false,
+              // verifyOtp calls Supabase verifyOTP which creates the session.
               onVerifyOtp: (entered) async {
                 if (!isEmail) return false;
-                final ok = await emailOtp.verifyOtp(
+                return emailOtp.verifyOtp(
                   email: contactValue,
                   purpose: 'signup',
                   otp: entered,
                 );
-                if (!ok) return false;
-                // Create the user in Supabase (this may trigger Supabase email
-                // confirmation as well depending on your Supabase settings).
-                await _auth.sendEmailSignupOtp(
-                  email: contactValue,
-                  password: password,
-                );
-                return true;
               },
               onResendOtp: () async {
                 if (!isEmail) return;
                 await emailOtp.sendOtpEmail(
                   email: contactValue,
                   purpose: 'signup',
+                  shouldCreateUser: true,
                 );
               },
             ),
@@ -355,6 +347,118 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  /// Shows a modal dialog when the submitted email is already registered.
+  /// Gives the user clear actions: go to Sign In or Reset Password.
+  Future<void> _showAlreadyRegisteredDialog(String email) async {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: BirrTheme.primary.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.person_outline_rounded,
+                  color: BirrTheme.primary,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  'Account Already Exists',
+                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700),
+                ),
+              ),
+            ],
+          ),
+          content: RichText(
+            text: TextSpan(
+              style: const TextStyle(
+                fontSize: 14,
+                height: 1.5,
+                color: Color(0xFF4B5563),
+              ),
+              children: [
+                const TextSpan(
+                  text: 'An account registered with\n',
+                ),
+                TextSpan(
+                  text: email,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    color: BirrTheme.primary,
+                  ),
+                ),
+                const TextSpan(
+                  text:
+                      '\nalready exists. Please sign in, or reset your password if you have forgotten it.',
+                ),
+              ],
+            ),
+          ),
+          actionsAlignment: MainAxisAlignment.spaceEvenly,
+          actionsPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          actions: [
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: BirrTheme.primary),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                _startPasswordReset();
+              },
+              child: const Text(
+                'Reset Password',
+                style: TextStyle(color: BirrTheme.primary),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: BirrTheme.primary,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                elevation: 0,
+              ),
+              onPressed: () {
+                Navigator.of(dialogContext).pop();
+                setState(() {
+                  _authAction = AuthAction.signIn;
+                  _authMethod = AuthMethod.email;
+                  _emailController.text = email;
+                  _passwordController.clear();
+                });
+              },
+              child: const Text(
+                'Sign In',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ],
         );
       },
     );

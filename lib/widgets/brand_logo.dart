@@ -41,7 +41,7 @@ class BrandLogo extends StatelessWidget {
                 ),
               ],
               Image.asset(
-                'lib/assets/Logo.png',
+                'lib/assets/Logo.png.jpeg',
                 width: logoSize,
                 height: logoSize,
                 fit: BoxFit.contain,
