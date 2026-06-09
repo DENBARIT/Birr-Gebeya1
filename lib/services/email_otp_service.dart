@@ -1,20 +1,16 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-/// Result returned after attempting to dispatch an OTP to the user's e-mail.
-///
-/// [isDemoMode] is always false when using the Supabase-native flow — the
-/// code is generated and delivered entirely by Supabase via your configured
-/// SMTP provider.
+/// Result returned after dispatching an OTP via Supabase Auth.
 class OtpDispatchResult {
   final String email;
   final String purpose;
   final String message;
 
-  /// Always false in the Supabase-native flow. Kept for API compatibility.
+  /// Always false — Supabase handles delivery via your configured SMTP.
   final bool isDemoMode;
 
-  /// Always null in the Supabase-native flow.
+  /// Always null — the code is never exposed to the client.
   final String? demoOtp;
 
   const OtpDispatchResult({
@@ -26,25 +22,26 @@ class OtpDispatchResult {
   });
 }
 
-/// Handles e-mail OTP dispatch and verification via **Supabase Auth**.
+/// Handles e-mail OTP dispatch and verification using **Supabase Auth**.
 ///
-/// Sending:
-///   Uses [SupabaseClient.auth.signInWithOtp] which triggers Supabase to send
-///   a 6-digit code through your project's configured SMTP provider.
+/// ### Sending
+/// Calls [SupabaseClient.auth.signInWithOtp] — Supabase generates the 6-digit
+/// code and delivers it via the SMTP settings you configured in your Supabase
+/// project (Authentication → Settings → SMTP).
 ///
-/// Verifying:
-///   Uses [SupabaseClient.auth.verifyOTP] with [OtpType.email] to validate the
-///   code entered by the user and establish a session.
+/// ### Verifying
+/// Calls [SupabaseClient.auth.verifyOTP] with [OtpType.email].  On success
+/// Supabase creates a session, so `auth.currentUser` is available immediately.
 class EmailOtpService {
   EmailOtpService({SupabaseClient? client})
-    : _client = client ?? Supabase.instance.client;
+      : _client = client ?? Supabase.instance.client;
 
   final SupabaseClient _client;
 
-  /// Sends a 6-digit OTP to [email] via Supabase Auth (SMTP).
+  /// Sends a 6-digit OTP to [email] through Supabase's configured SMTP.
   ///
-  /// [shouldCreateUser] controls whether Supabase creates a new user row if the
-  /// e-mail is not yet registered (defaults to true for the sign-up flow).
+  /// Set [shouldCreateUser] to `true` (default) for sign-up so that Supabase
+  /// creates the user row if it doesn't exist yet.
   Future<OtpDispatchResult> sendOtpEmail({
     required String email,
     required String purpose,
@@ -60,7 +57,7 @@ class EmailOtpService {
         email: normalizedEmail,
         shouldCreateUser: shouldCreateUser,
       );
-      debugPrint('EmailOtpService: OTP email sent via Supabase SMTP');
+      debugPrint('EmailOtpService: OTP sent successfully via Supabase SMTP');
       return OtpDispatchResult(
         email: normalizedEmail,
         purpose: purpose,
@@ -68,20 +65,18 @@ class EmailOtpService {
         isDemoMode: false,
       );
     } on AuthException catch (e, st) {
-      debugPrint('EmailOtpService: AuthException sending OTP: $e');
-      debugPrint('$st');
+      debugPrint('EmailOtpService: AuthException sending OTP: $e\n$st');
       rethrow;
     } catch (e, st) {
-      debugPrint('EmailOtpService: unexpected error sending OTP: $e');
-      debugPrint('$st');
+      debugPrint('EmailOtpService: unexpected error sending OTP: $e\n$st');
       rethrow;
     }
   }
 
-  /// Verifies the 6-digit [otp] code for [email] using Supabase Auth.
+  /// Verifies [otp] against Supabase Auth for [email].
   ///
-  /// Returns `true` and establishes a Supabase session on success.
-  /// Throws [AuthException] if the code is invalid or expired.
+  /// Returns `true` on success (a session is now active).
+  /// Returns `false` on an invalid/expired code.
   Future<bool> verifyOtp({
     required String email,
     required String purpose,
@@ -98,15 +93,13 @@ class EmailOtpService {
         token: otp,
         type: OtpType.email,
       );
-      debugPrint('EmailOtpService: OTP verified successfully');
+      debugPrint('EmailOtpService: OTP verified — session created');
       return true;
     } on AuthException catch (e, st) {
-      debugPrint('EmailOtpService: OTP verification failed: $e');
-      debugPrint('$st');
+      debugPrint('EmailOtpService: OTP verification failed: $e\n$st');
       return false;
     } catch (e, st) {
-      debugPrint('EmailOtpService: unexpected error verifying OTP: $e');
-      debugPrint('$st');
+      debugPrint('EmailOtpService: unexpected error verifying OTP: $e\n$st');
       return false;
     }
   }
