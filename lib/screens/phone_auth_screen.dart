@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/app_state.dart';
 import '../services/auth_service.dart';
+import '../services/email_otp_service.dart';
 import '../services/supabase_app_repository.dart';
 import '../theme/design_system.dart';
 import '../widgets/brand_logo.dart';
@@ -125,12 +126,32 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         final e164Phone = contactValue.replaceAll(' ', '');
         final password = _passwordController.text.trim();
 
-        // Generate a local on-screen verification code (no email is sent).
-        final verificationCode =
-            (100000 + (DateTime.now().microsecondsSinceEpoch % 900000))
-                .toString();
+        // For email sign-up, send a verification code to the user's e-mail
+        // via SMTP (or Supabase function if configured), then verify it.
+        final emailOtp = EmailOtpService();
+        OtpDispatchResult dispatchResult = OtpDispatchResult(
+          email: contactValue,
+          purpose: 'signup',
+          message: 'Demo code generated',
+          isDemoMode: true,
+        );
+
+        if (isEmail) {
+          dispatchResult = await emailOtp.sendOtpEmail(
+            email: contactValue,
+            purpose: 'signup',
+          );
+        }
 
         if (!mounted) return;
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(dispatchResult.message),
+            backgroundColor: dispatchResult.isDemoMode ? Colors.orange : BirrTheme.primary,
+          ),
+        );
+
         final otpResult = await Navigator.of(context).push<bool?>(
           MaterialPageRoute(
             builder: (_) => OtpVerificationScreen(
@@ -139,20 +160,31 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               contactValue: contactValue,
               channel: isEmail ? 'email' : 'phone',
               purpose: isEmail ? OtpPurpose.signup : OtpPurpose.sms,
-              initialOtp: verificationCode,
-              autoFillOtp: true,
-              // On confirm: validate the on-screen code, then create the user.
+              initialOtp: dispatchResult.isDemoMode ? (dispatchResult.demoOtp ?? '') : '',
+              autoFillOtp: dispatchResult.isDemoMode,
+              // On confirm: validate via EmailOtpService, then create the user.
               onVerifyOtp: (entered) async {
-                if (entered != verificationCode) return false;
-                if (isEmail) {
-                  // With email auto-confirm enabled, this creates AND confirms
-                  // the account immediately — no email round-trip needed.
-                  await _auth.sendEmailSignupOtp(
-                    email: contactValue,
-                    password: password,
-                  );
-                }
+                if (!isEmail) return false;
+                final ok = await emailOtp.verifyOtp(
+                  email: contactValue,
+                  purpose: 'signup',
+                  otp: entered,
+                );
+                if (!ok) return false;
+                // Create the user in Supabase (this may trigger Supabase email
+                // confirmation as well depending on your Supabase settings).
+                await _auth.sendEmailSignupOtp(
+                  email: contactValue,
+                  password: password,
+                );
                 return true;
+              },
+              onResendOtp: () async {
+                if (!isEmail) return;
+                await emailOtp.sendOtpEmail(
+                  email: contactValue,
+                  purpose: 'signup',
+                );
               },
             ),
           ),

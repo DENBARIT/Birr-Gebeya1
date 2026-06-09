@@ -1,3 +1,4 @@
+import 'package:video_player/video_player.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/design_system.dart';
@@ -13,20 +14,25 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  late final AnimationController _lineController;
+  late final VideoPlayerController _videoController;
+  late final Future<void> _videoInitialize;
 
   @override
   void initState() {
     super.initState();
-    _lineController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1800),
-    )..repeat();
+    _videoController = VideoPlayerController.asset('lib/assets/video.mp4')
+      ..setLooping(true)
+      ..setVolume(0.0);
+    _videoInitialize = _videoController.initialize().then((_) {
+      if (!mounted) return;
+      _videoController.play();
+      setState(() {});
+    });
   }
 
   @override
   void dispose() {
-    _lineController.dispose();
+    _videoController.dispose();
     super.dispose();
   }
 
@@ -73,216 +79,204 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-
-            // Main content layout
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                vertical: 16.0,
-              ),
-              child: Column(
-                children: [
-                  const Spacer(flex: 3),
-
-                  // Visual Branding
-                  Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const BrandLogo(size: 172),
-                      const SizedBox(height: 8.0),
-                      Text(
-                        'Grow your money with Ethiopian Treasury Bills',
-                        textAlign: TextAlign.center,
-                        style: BirrTheme.getBodyLg(context).copyWith(
-                          color: BirrTheme.onSurfaceVariant,
-                          height: 1.4,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const Spacer(flex: 2),
-
-                  // Middle section image simulation placeholder
-                  Container(
-                    width: double.infinity,
-                    height: 200,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Colors.white, BirrTheme.surfaceContainerLow],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: BirrTheme.outlineVariant.withValues(alpha: 0.7),
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: BirrTheme.primary.withValues(alpha: 0.08),
-                          blurRadius: 24,
-                          offset: const Offset(0, 10),
+            SingleChildScrollView(
+              physics: const ClampingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20.0,
+                  vertical: 16.0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const SizedBox(height: 40),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const BrandLogo(size: 172),
+                        const SizedBox(height: 8.0),
+                        Text(
+                          'Grow your money with Ethiopian Treasury Bills',
+                          textAlign: TextAlign.center,
+                          style: BirrTheme.getBodyLg(context).copyWith(
+                            color: BirrTheme.onSurfaceVariant,
+                            height: 1.4,
+                          ),
                         ),
                       ],
                     ),
-                    clipBehavior: Clip.antiAlias,
-                    child: Stack(
-                      children: [
-                        Positioned(
-                          top: -60,
-                          left: -40,
-                          child: _GlowOrb(
-                            size: 150,
-                            color: BirrTheme.primary.withValues(alpha: 0.08),
+                    const SizedBox(height: 32),
+                    Container(
+                      width: double.infinity,
+                      height: 230,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Colors.white,
+                            BirrTheme.surfaceContainerLow,
+                            BirrTheme.primaryContainer.withValues(alpha: 0.16),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(28),
+                        border: Border.all(
+                          color: BirrTheme.outlineVariant.withValues(
+                            alpha: 0.55,
                           ),
                         ),
-                        Positioned(
-                          bottom: -50,
-                          right: -30,
-                          child: _GlowOrb(
-                            size: 130,
-                            color: BirrTheme.secondaryContainer.withValues(
-                              alpha: 0.16,
+                        boxShadow: [
+                          BoxShadow(
+                            color: BirrTheme.primary.withValues(alpha: 0.08),
+                            blurRadius: 26,
+                            offset: const Offset(0, 12),
+                          ),
+                        ],
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          Positioned(
+                            top: -60,
+                            left: -40,
+                            child: _GlowOrb(
+                              size: 150,
+                              color: BirrTheme.primary.withValues(alpha: 0.08),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: -50,
+                            right: -30,
+                            child: _GlowOrb(
+                              size: 130,
+                              color: BirrTheme.secondaryContainer.withValues(
+                                alpha: 0.16,
+                              ),
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: FutureBuilder<void>(
+                              future: _videoInitialize,
+                              builder: (context, snapshot) {
+                                if (snapshot.connectionState !=
+                                        ConnectionState.done ||
+                                    !_videoController.value.isInitialized) {
+                                  return const Center(
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2.2,
+                                    ),
+                                  );
+                                }
+
+                                return FittedBox(
+                                  fit: BoxFit.cover,
+                                  child: SizedBox(
+                                    width: _videoController.value.size.width,
+                                    height: _videoController.value.size.height,
+                                    child: VideoPlayer(_videoController),
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.white.withValues(alpha: 0.02),
+                                    BirrTheme.primary.withValues(alpha: 0.06),
+                                    BirrTheme.background.withValues(
+                                      alpha: 0.12,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 40),
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          height: 56,
+                          child: ElevatedButton(
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const PhoneAuthScreen(),
+                                ),
+                              );
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: BirrTheme.primary,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: Text(
+                              'Get Started',
+                              style: BirrTheme.getHeadlineMdMobile(context)
+                                  .copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                             ),
                           ),
                         ),
-                        Center(
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              SizedBox(
-                                width: double.infinity,
-                                height: 76,
-                                child: AnimatedBuilder(
-                                  animation: _lineController,
-                                  builder: (context, _) {
-                                    return CustomPaint(
-                                      painter: _ZigZagLinePainter(
-                                        progress: _lineController.value,
-                                        color: BirrTheme.primary,
-                                      ),
-                                    );
-                                  },
-                                ),
-                              ),
-                              const SizedBox(height: 14),
-                              Text(
-                                'A warmer way to grow savings',
-                                style: BirrTheme.getHeadlineMdMobile(context)
-                                    .copyWith(
-                                      color: BirrTheme.primary,
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 12,
-                          left: 12,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Secure yield rates up to 10.5%',
-                                style: BirrTheme.getLabelBold(
-                                  context,
-                                ).copyWith(color: BirrTheme.primary),
-                              ),
-                              Text(
-                                'Guaranteed by the Government of Ethiopia',
-                                style: BirrTheme.getLabelMd(context),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const Spacer(flex: 3),
-
-                  // Actions & Compliance
-                  Column(
-                    children: [
-                      // Get Started Primary Action
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
+                        const SizedBox(height: 12.0),
+                        TextButton(
                           onPressed: () {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const PhoneAuthScreen(),
+                                builder: (context) => const PhoneAuthScreen(
+                                  initialAction: AuthAction.signIn,
+                                ),
                               ),
                             );
                           },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: BirrTheme.primary,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            elevation: 0,
+                          style: TextButton.styleFrom(
+                            foregroundColor: BirrTheme.primary,
                           ),
                           child: Text(
-                            'Get Started',
-                            style: BirrTheme.getHeadlineMdMobile(context)
-                                .copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12.0),
-
-                      // Secondary Navigation Action
-                      TextButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => const PhoneAuthScreen(
-                                initialAction: AuthAction.signIn,
-                              ),
+                            'Already have an account? Sign in',
+                            style: BirrTheme.getBodyLg(context).copyWith(
+                              color: BirrTheme.primary,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
                             ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: BirrTheme.primary,
-                        ),
-                        child: Text(
-                          'Already have an account? Sign in',
-                          style: BirrTheme.getBodyLg(context).copyWith(
-                            color: BirrTheme.primary,
-                            fontWeight: FontWeight.w600,
-                            decoration: TextDecoration.underline,
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 16.0),
-
-                      // Compliance Footer
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(
-                            Icons.verified_user,
-                            size: 16,
-                            color: BirrTheme.onSurfaceVariant,
-                          ),
-                          const SizedBox(width: 6.0),
-                          Text(
-                            'Regulated by National Bank of Ethiopia',
-                            style: BirrTheme.getLabelMd(context),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+                        const SizedBox(height: 16.0),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(
+                              Icons.verified_user,
+                              size: 16,
+                              color: BirrTheme.onSurfaceVariant,
+                            ),
+                            const SizedBox(width: 6.0),
+                            Text(
+                              'Regulated by National Bank of Ethiopia',
+                              style: BirrTheme.getLabelMd(context),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ],

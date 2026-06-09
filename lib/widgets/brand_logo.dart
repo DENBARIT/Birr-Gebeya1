@@ -47,17 +47,6 @@ class BrandLogo extends StatelessWidget {
                 fit: BoxFit.contain,
                 filterQuality: FilterQuality.high,
               ),
-              Positioned(
-                bottom: size * 0.02,
-                child: Container(
-                  width: size * 0.24,
-                  height: size * 0.045,
-                  decoration: BoxDecoration(
-                    color: BirrTheme.primary.withValues(alpha: 0.16),
-                    borderRadius: BorderRadius.circular(size * 0.03),
-                  ),
-                ),
-              ),
             ],
           ),
         ),
