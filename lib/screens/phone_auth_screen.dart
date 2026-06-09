@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -129,20 +130,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         final isEmail = _authMethod == AuthMethod.email;
         final e164Phone = contactValue.replaceAll(' ', '');
 
-        // For email sign-up, Supabase sends a 6-digit code via your configured
-        // SMTP provider. No custom SMTP or demo mode needed.
-        final emailOtp = EmailOtpService();
-
         if (isEmail) {
-          final dispatchResult = await emailOtp.sendOtpEmail(
+          // Use password-based sign-up so the password is stored in Supabase
+          // Auth and sign-in with password works correctly later.
+          await _auth.sendEmailSignupOtp(
             email: contactValue,
-            purpose: 'signup',
-            shouldCreateUser: true,
+            password: _passwordController.text.trim(),
           );
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(dispatchResult.message),
+            const SnackBar(
+              content: Text(
+                'Verification code sent to your email. Please check your inbox.',
+              ),
               backgroundColor: BirrTheme.primary,
             ),
           );
@@ -158,24 +158,28 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               contactValue: contactValue,
               channel: isEmail ? 'email' : 'phone',
               purpose: isEmail ? OtpPurpose.signup : OtpPurpose.sms,
-              // Supabase sends the real code — no demo/autofill.
               initialOtp: '',
               autoFillOtp: false,
-              // verifyOtp calls Supabase verifyOTP which creates the session.
               onVerifyOtp: (entered) async {
                 if (!isEmail) return false;
-                return emailOtp.verifyOtp(
-                  email: contactValue,
-                  purpose: 'signup',
-                  otp: entered,
-                );
+                // Use OtpType.signup so Supabase links the OTP to the
+                // password-based signup and creates the session correctly.
+                try {
+                  final res = await _auth.verifyEmailSignup(
+                    email: contactValue,
+                    token: entered,
+                  );
+                  return res.session != null;
+                } catch (e) {
+                  debugPrint('verifyEmailSignup failed: $e');
+                  return false;
+                }
               },
               onResendOtp: () async {
                 if (!isEmail) return;
-                await emailOtp.sendOtpEmail(
+                await _auth.sendEmailSignupOtp(
                   email: contactValue,
-                  purpose: 'signup',
-                  shouldCreateUser: true,
+                  password: _passwordController.text.trim(),
                 );
               },
             ),
@@ -212,7 +216,8 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
       if (_authAction == AuthAction.resetPassword) {
         final email = _emailController.text.trim();
-        await _auth.sendPasswordResetOtp(email: email);
+        final String? redirectTo = kIsWeb ? Uri.base.origin : null;
+        await _auth.sendPasswordResetOtp(email: email, redirectTo: redirectTo);
 
         if (!mounted) return;
         final otpResult = await Navigator.of(context).push<bool?>(
@@ -223,6 +228,23 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               contactValue: email,
               channel: 'email',
               purpose: OtpPurpose.recovery,
+              initialOtp: '',
+              autoFillOtp: false,
+              onVerifyOtp: (entered) async {
+                try {
+                  final res = await _auth.verifyPasswordReset(
+                    email: email,
+                    token: entered,
+                  );
+                  return res.session != null;
+                } catch (e) {
+                  debugPrint('Recovery verification failed: $e');
+                  return false;
+                }
+              },
+              onResendOtp: () async {
+                await _auth.sendPasswordResetOtp(email: email, redirectTo: redirectTo);
+              },
             ),
           ),
         );

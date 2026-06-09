@@ -76,6 +76,8 @@ class SupabaseAppRepository {
     required String userName,
     String? fullName,
     String? telebirrNumber,
+    String? nationalId,
+    String? region,
     String? email,
     String? phoneNumber,
   }) async {
@@ -87,6 +89,8 @@ class SupabaseAppRepository {
       'username': userName,
       'full_name': fullName,
       'telebirr_number': telebirrNumber,
+      'national_id': nationalId,
+      'region': region,
       'email': email,
       'phone_number': phoneNumber,
     }..removeWhere((k, v) => v == null);
