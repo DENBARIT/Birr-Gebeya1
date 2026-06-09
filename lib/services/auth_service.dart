@@ -136,11 +136,14 @@ class AuthService {
   // Password reset: e-mail a recovery code, verify it (creates a session), then
   // set the new password.
   // ---------------------------------------------------------------------------
-  Future<void> sendPasswordResetOtp({required String email}) async {
+  Future<void> sendPasswordResetOtp({
+    required String email,
+    String? redirectTo,
+  }) async {
     try {
       await _ensureNetworkForAuth();
-      debugPrint('AuthService.sendPasswordResetOtp: email=$email');
-      await _client.auth.resetPasswordForEmail(email);
+      debugPrint('AuthService.sendPasswordResetOtp: email=$email, redirectTo=$redirectTo');
+      await _client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
     } on SocketException catch (e, st) {
       _logNetworkError('sendPasswordResetOtp', e, st);
       rethrow;

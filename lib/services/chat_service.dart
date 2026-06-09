@@ -11,7 +11,7 @@ class ChatMessage {
   const ChatMessage({required this.role, required this.text});
 }
 
-/// Talks to the xAI Grok API (OpenAI-compatible chat completions endpoint).
+/// Talks to the Groq API (OpenAI-compatible chat completions endpoint).
 /// Powers the in-app investment-advisor chatbot.
 ///
 /// Security note: this calls the API directly with the key from `.env`, which
@@ -19,8 +19,8 @@ class ChatMessage {
 /// proxy these requests through a backend (e.g. a Supabase Edge Function) so
 /// the key never leaves the server.
 class ChatService {
-  static const String _model = 'grok-3-mini';
-  static const String _endpointPath = '/v1/chat/completions';
+  static const String _model = 'llama-3.3-70b-versatile';
+  static const String _endpointPath = '/openai/v1/chat/completions';
 
   // Stable, cacheable advisor instructions (no per-user data here, so the
   // prompt-cache prefix stays identical across turns and users).
@@ -99,7 +99,7 @@ Style and rules:
     try {
       resp = await http
           .post(
-            Uri.https('api.x.ai', _endpointPath),
+            Uri.https('api.groq.com', _endpointPath),
             headers: {
               'content-type': 'application/json',
               'Authorization': 'Bearer $apiKey',

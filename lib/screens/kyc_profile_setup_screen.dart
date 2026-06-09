@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/design_system.dart';
 import '../models/app_state.dart';
@@ -18,18 +18,37 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
   );
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
+  final TextEditingController _nationalIdController = TextEditingController();
 
   String? _selectedGender;
+  String? _selectedRegion;
   DateTime? _selectedDob;
   bool _confirmAccurate = false;
   bool _agreeTerms = false;
   bool _isLoading = false;
+
+  static const List<String> _ethiopianRegions = [
+    'Addis Ababa',
+    'Afar',
+    'Amhara',
+    'Benishangul-Gumuz',
+    'Dire Dawa',
+    'Gambela',
+    'Harari',
+    'Oromia',
+    'Sidama',
+    'Somali',
+    'South West Ethiopia Peoples',
+    'Southern Nations, Nationalities, and Peoples (SNNP)',
+    'Tigray',
+  ];
 
   @override
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
     _dobController.dispose();
+    _nationalIdController.dispose();
     super.dispose();
   }
 
@@ -72,6 +91,16 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
         return;
       }
 
+      if (_selectedRegion == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Please select your region'),
+            backgroundColor: BirrTheme.error,
+          ),
+        );
+        return;
+      }
+
       if (!_confirmAccurate || !_agreeTerms) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -88,12 +117,15 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
 
       final name = _nameController.text.trim();
       final email = _emailController.text.trim();
+      final nationalId = _nationalIdController.text.trim();
 
       await Provider.of<AppState>(context, listen: false).updateProfile(
         userName: name,
         fullNameValue: name,
         genderValue: _selectedGender,
         dateOfBirthValue: _selectedDob,
+        nationalIdValue: nationalId.isNotEmpty ? nationalId : null,
+        regionValue: _selectedRegion,
         email: email,
       );
 
@@ -259,6 +291,71 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                     },
                     decoration: const InputDecoration(
                       hintText: 'Select gender',
+                    ),
+                  ),
+
+                  const SizedBox(height: 20.0),
+
+                  Text(
+                    'National ID',
+                    style: BirrTheme.getLabelBold(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 8.0),
+                  TextFormField(
+                    controller: _nationalIdController,
+                    keyboardType: TextInputType.text,
+                    textCapitalization: TextCapitalization.characters,
+                    validator: (value) {
+                      if (value == null || value.trim().isEmpty) {
+                        return 'Please enter your National ID number';
+                      }
+                      if (value.trim().length < 6) {
+                        return 'Please enter a valid National ID';
+                      }
+                      return null;
+                    },
+                    style: BirrTheme.getBodyLg(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
+                    decoration: const InputDecoration(
+                      hintText: 'Enter your National ID number',
+                      prefixIcon: Icon(Icons.credit_card_outlined),
+                    ),
+                  ),
+
+                  const SizedBox(height: 20.0),
+
+                  Text(
+                    'Region',
+                    style: BirrTheme.getLabelBold(
+                      context,
+                    ).copyWith(color: BirrTheme.onSurfaceVariant),
+                  ),
+                  const SizedBox(height: 8.0),
+                  DropdownButtonFormField<String>(
+                    value: _selectedRegion,
+                    isExpanded: true,
+                    items: _ethiopianRegions
+                        .map(
+                          (r) => DropdownMenuItem(value: r, child: Text(r)),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedRegion = value;
+                      });
+                    },
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please select your region';
+                      }
+                      return null;
+                    },
+                    decoration: const InputDecoration(
+                      hintText: 'Select your region',
+                      prefixIcon: Icon(Icons.location_on_outlined),
                     ),
                   ),
 
