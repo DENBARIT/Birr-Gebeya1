@@ -513,13 +513,18 @@ class _SplashScreenState extends State<SplashScreen> {
                             ),
                           ),
 
-                          // DotLottieView widget rendering the local asset
+                          // DotLottieView widget rendering the local asset.
+                          // NOTE: dotlottie_flutter internally prepends
+                          // 'assets/' via rootBundle.load('assets/$source'),
+                          // so the source must be the path RELATIVE to the
+                          // assets/ folder (i.e. without the 'assets/' prefix).
                           Positioned.fill(
                             child: DotLottieView(
-                              source: 'assets/investment_animation.lottie',
+                              source: 'investment_animation.lottie',
                               sourceType: 'asset',
                               autoplay: true,
                               loop: true,
+                              fit: BoxFit.contain,
                             ),
                           ),
 
