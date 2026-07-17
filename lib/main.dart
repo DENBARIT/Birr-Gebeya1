@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'theme/design_system.dart';
 import 'models/app_state.dart';
 import 'screens/splash_screen.dart';
-import 'screens/admin_login_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
