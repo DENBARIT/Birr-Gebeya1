@@ -3,6 +3,15 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+// Note: methods below catch SocketException (a genuine connectivity failure
+// raised by the actual Supabase request) purely to log it and show a
+// friendlier message upstream — there is no pre-flight DNS/connectivity
+// check here. An earlier version pre-checked reachability via
+// InternetAddress.lookup() before every call, but that raw socket-level
+// lookup can false-positive on real devices (Private DNS, DNS-filtering
+// VPNs, ad-blockers) even when the actual HTTPS request would succeed,
+// which silently blocked every auth request from ever reaching Supabase.
+
 /// Thin wrapper around Supabase Auth for the e-mail / phone OTP flows used by
 /// the sign-up, sign-in and password-reset screens.
 ///
@@ -26,7 +35,6 @@ class AuthService {
     required String password,
   }) async {
     try {
-      await _ensureNetworkForAuth();
       debugPrint('AuthService.sendEmailSignupOtp: email=$email');
       final res = await _client.auth.signUp(email: email, password: password);
       debugPrint('sendEmailSignupOtp response: ${res.toString()}');
@@ -58,7 +66,6 @@ class AuthService {
 
   Future<void> resendEmailSignupOtp({required String email}) async {
     try {
-      await _ensureNetworkForAuth();
       debugPrint('AuthService.resendEmailSignupOtp: email=$email');
       await _client.auth.resend(type: OtpType.signup, email: email);
     } on SocketException catch (e, st) {
@@ -77,12 +84,17 @@ class AuthService {
   Future<AuthResponse> signInWithPassword({
     required String email,
     required String password,
-  }) {
+  }) async {
     debugPrint('AuthService.signInWithPassword: email=$email');
-    return _withNetworkGuard(
-      'signInWithPassword',
-      () => _client.auth.signInWithPassword(email: email, password: password),
-    );
+    try {
+      return await _client.auth.signInWithPassword(
+        email: email,
+        password: password,
+      );
+    } on SocketException catch (e, st) {
+      _logNetworkError('signInWithPassword', e, st);
+      rethrow;
+    }
   }
 
   // ---------------------------------------------------------------------------
@@ -90,7 +102,6 @@ class AuthService {
   // ---------------------------------------------------------------------------
   Future<void> sendSmsOtp({required String phone}) async {
     try {
-      await _ensureNetworkForAuth();
       debugPrint('AuthService.sendSmsOtp: phone=$phone');
       await _client.auth.signInWithOtp(phone: phone);
     } on SocketException catch (e, st) {
@@ -119,7 +130,6 @@ class AuthService {
 
   Future<void> resendSmsOtp({required String phone}) async {
     try {
-      await _ensureNetworkForAuth();
       debugPrint('AuthService.resendSmsOtp: phone=$phone');
       await _client.auth.signInWithOtp(phone: phone);
     } on SocketException catch (e, st) {
@@ -141,8 +151,9 @@ class AuthService {
     String? redirectTo,
   }) async {
     try {
-      await _ensureNetworkForAuth();
-      debugPrint('AuthService.sendPasswordResetOtp: email=$email, redirectTo=$redirectTo');
+      debugPrint(
+        'AuthService.sendPasswordResetOtp: email=$email, redirectTo=$redirectTo',
+      );
       await _client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
     } on SocketException catch (e, st) {
       _logNetworkError('sendPasswordResetOtp', e, st);
@@ -167,7 +178,6 @@ class AuthService {
 
   Future<void> updatePassword({required String newPassword}) async {
     try {
-      await _ensureNetworkForAuth();
       debugPrint('AuthService.updatePassword');
       await _client.auth.updateUser(UserAttributes(password: newPassword));
     } on SocketException catch (e, st) {
@@ -181,35 +191,6 @@ class AuthService {
   }
 
   Future<void> signOut() => _client.auth.signOut();
-
-  Future<T> _withNetworkGuard<T>(
-    String action,
-    Future<T> Function() run,
-  ) async {
-    try {
-      await _ensureNetworkForAuth();
-      return await run();
-    } on SocketException catch (e, st) {
-      _logNetworkError(action, e, st);
-      rethrow;
-    }
-  }
-
-  Future<void> _ensureNetworkForAuth() async {
-    final host = Uri.parse(_client.rest.url).host;
-    // InternetAddress.lookup is not supported on web builds. Skip DNS
-    // lookup for web; let the HTTP request fail naturally if there's a
-    // connectivity issue.
-    if (kIsWeb) return;
-
-    try {
-      await InternetAddress.lookup(host);
-    } on SocketException catch (e) {
-      throw SocketException(
-        'Cannot reach Supabase host "$host". Check internet, VPN, Private DNS, or ad-blocking DNS. Original error: $e',
-      );
-    }
-  }
 
   void _logNetworkError(String action, SocketException error, StackTrace st) {
     debugPrint('$action network error: $error');

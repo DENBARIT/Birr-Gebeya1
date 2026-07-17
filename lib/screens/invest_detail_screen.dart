@@ -304,7 +304,7 @@ class _InvestDetailScreenState extends State<InvestDetailScreen> {
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Text(
-                                      'Government Bond',
+                                      widget.pool.categoryBadgeLabel,
                                       style: BirrTheme.getLabelBold(context)
                                           .copyWith(
                                             color: BirrTheme.secondary,

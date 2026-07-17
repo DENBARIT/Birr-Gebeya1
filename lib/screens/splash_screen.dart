@@ -93,7 +93,12 @@ class _SplashScreenState extends State<SplashScreen>
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const BrandLogo(size: 172),
+                        const BrandLogo(
+                          size: 172,
+                          showLabel: false,
+                          circular: true,
+                          glimmer: true,
+                        ),
                         const SizedBox(height: 8.0),
                         Text(
                           'Grow your money with Ethiopian Treasury Bills',

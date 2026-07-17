@@ -39,6 +39,7 @@ dependencies:
   supabase_flutter: ^1.5.0
   flutter_dotenv: ^5.1.0
   postgres: ^3.5.5
+  shared_preferences: ^2.5.5
   http: ^1.2.2
   lottie: ^3.1.3
   video_player: ^2.11.1
@@ -116,4 +117,7 @@ flutter:
 flutter_icons:
   android: true
   ios: true
-  image_path: "lib/assets/Logo.png"
+  image_path: "lib/assets/Logo.png.jpeg"
+  image_path_android: "lib/assets/AppIconCircular.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "lib/assets/AppIconCircular.png"

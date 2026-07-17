@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SupabaseAppRepository {
@@ -26,37 +25,6 @@ class SupabaseAppRepository {
         .eq('phone_number', normalizedPhone)
         .maybeSingle();
     return resp != null;
-  }
-
-  /// Checks whether [email] is already registered in Supabase Auth (auth.users).
-  ///
-  /// Strategy: call [signInWithOtp] with [shouldCreateUser] = false.
-  /// • If Supabase accepts it (no exception) → user exists in auth, OTP was sent.
-  /// • If Supabase throws with a message containing "not found" or similar →
-  ///   user does NOT exist in auth.
-  ///
-  /// We immediately return the result without the caller needing to look at
-  /// the OTP screen — the user is blocked from proceeding.
-  Future<bool> emailExistsInAuth(String email) async {
-    final normalizedEmail = email.trim().toLowerCase();
-    if (normalizedEmail.isEmpty) return false;
-    try {
-      await _client.auth.signInWithOtp(
-        email: normalizedEmail,
-        shouldCreateUser: false,
-      );
-      // Supabase accepted it → user already exists.
-      debugPrint('emailExistsInAuth: $normalizedEmail exists in auth');
-      return true;
-    } on AuthException catch (e) {
-      debugPrint('emailExistsInAuth AuthException: ${e.message}');
-      // Supabase says the user was not found → new user.
-      return false;
-    } catch (e) {
-      debugPrint('emailExistsInAuth unexpected error: $e');
-      // On any other error (network, etc.) assume not found to be safe.
-      return false;
-    }
   }
 
   Future<Map<String, dynamic>?> fetchProfile() async {

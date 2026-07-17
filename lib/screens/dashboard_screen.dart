@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../theme/design_system.dart';
+import '../localization/app_translations.dart';
 import '../models/app_state.dart';
 import '../models/investment_pool.dart';
 import 'chatbot_screen.dart';
@@ -46,48 +47,249 @@ class AppNavigationShellState extends State<AppNavigationShell> {
 
   @override
   Widget build(BuildContext context) {
+    final appState = context.watch<AppState>();
     return Scaffold(
       body: IndexedStack(index: _selectedIndex, children: _pages),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const ChatbotScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const ChatbotScreen()));
         },
         backgroundColor: BirrTheme.primary,
         foregroundColor: Colors.white,
         icon: const Icon(Icons.auto_awesome),
-        label: const Text('Ask AI'),
+        label: Text(appState.t('askAi')),
       ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _selectedIndex,
         onTap: _onItemTapped,
         type: BottomNavigationBarType.fixed,
-        items: const [
+        items: [
           BottomNavigationBarItem(
-            icon: Icon(Icons.home_outlined),
-            label: 'Home',
+            icon: const Icon(Icons.home_outlined),
+            label: appState.t('navHome'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.account_balance_wallet_outlined),
-            label: 'Invest',
+            icon: const Icon(Icons.account_balance_wallet_outlined),
+            label: appState.t('navInvest'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.pie_chart_outline),
-            label: 'Portfolio',
+            icon: const Icon(Icons.pie_chart_outline),
+            label: appState.t('navPortfolio'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_outlined),
-            label: 'Alerts',
+            icon: const Icon(Icons.notifications_outlined),
+            label: appState.t('navNotifications'),
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.person_outline),
-            label: 'Profile',
+            icon: const Icon(Icons.person_outline),
+            label: appState.t('navProfile'),
           ),
         ],
       ),
     );
   }
+}
+
+/// Time-based greeting translation key, from the device's local clock.
+String _greetingKeyForNow() {
+  final hour = DateTime.now().hour;
+  if (hour >= 5 && hour < 12) return 'goodMorning';
+  if (hour >= 12 && hour < 17) return 'goodAfternoon';
+  if (hour >= 17 && hour < 21) return 'goodEvening';
+  return 'goodNight';
+}
+
+Future<void> _showLanguagePicker(BuildContext context, AppState appState) {
+  return showModalBottomSheet<void>(
+    context: context,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (sheetContext) {
+      return SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  appState.t('chooseLanguage'),
+                  style: BirrTheme.getLabelBold(
+                    sheetContext,
+                  ).copyWith(color: BirrTheme.onSurfaceVariant),
+                ),
+              ),
+            ),
+            for (final lang in AppLanguage.values)
+              ListTile(
+                title: Text(
+                  lang.nativeName,
+                  style: BirrTheme.getBodyLg(sheetContext),
+                ),
+                trailing: appState.language == lang
+                    ? const Icon(Icons.check, color: BirrTheme.primary)
+                    : null,
+                onTap: () {
+                  appState.setLanguage(lang);
+                  Navigator.pop(sheetContext);
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+/// Bottom sheet to withdraw from the user's invested balance — mirrors the
+/// invest flow's "enter an amount, review, confirm" pattern. On success the
+/// amount is subtracted from the holdings (via [AppState.withdraw]) and
+/// recorded as a [WithdrawalRecord] shown in the portfolio screen.
+void _showWithdrawSheet(BuildContext context, AppState appState) {
+  final amountController = TextEditingController();
+  final formKey = GlobalKey<FormState>();
+
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: BirrTheme.background,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (sheetContext) {
+      return Padding(
+        padding: EdgeInsets.only(
+          left: 20,
+          right: 20,
+          top: 20,
+          bottom: 20 + MediaQuery.of(sheetContext).viewInsets.bottom,
+        ),
+        child: Form(
+          key: formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 48,
+                  height: 5,
+                  decoration: BoxDecoration(
+                    color: BirrTheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                'Withdraw funds',
+                style: BirrTheme.getHeadlineLg(
+                  sheetContext,
+                ).copyWith(fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Available to withdraw: ETB ${appState.totalInvested.toStringAsFixed(0)}',
+                style: BirrTheme.getBodyMd(
+                  sheetContext,
+                ).copyWith(color: BirrTheme.onSurfaceVariant),
+              ),
+              const SizedBox(height: 20),
+              TextFormField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                style: BirrTheme.getDisplayCurrency(sheetContext),
+                validator: (value) {
+                  final amt = double.tryParse(value ?? '');
+                  if (amt == null || amt <= 0) {
+                    return 'Please enter an amount to withdraw';
+                  }
+                  if (amt > appState.totalInvested) {
+                    return 'Amount exceeds your available balance';
+                  }
+                  return null;
+                },
+                decoration: InputDecoration(
+                  prefixIcon: Padding(
+                    padding: const EdgeInsets.only(left: 16.0, right: 12.0),
+                    child: Text(
+                      'ETB',
+                      style: BirrTheme.getDisplayCurrency(sheetContext)
+                          .copyWith(
+                            color: BirrTheme.onSurfaceVariant,
+                            fontSize: 22,
+                          ),
+                    ),
+                  ),
+                  prefixIconConstraints: const BoxConstraints(
+                    minWidth: 0,
+                    minHeight: 0,
+                  ),
+                  hintText: '0.00',
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton(
+                      onPressed: () => Navigator.pop(sheetContext),
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: BirrTheme.secondary,
+                        side: const BorderSide(color: BirrTheme.secondary),
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text('Cancel'),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        if (!formKey.currentState!.validate()) return;
+                        final amount = double.parse(amountController.text);
+                        final success = appState.withdraw(amount);
+                        Navigator.pop(sheetContext);
+                        if (success) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'ETB ${amount.toStringAsFixed(0)} withdrawn to your Telebirr wallet.',
+                              ),
+                              backgroundColor: BirrTheme.primary,
+                            ),
+                          );
+                        }
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: BirrTheme.primary,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
+                      ),
+                      child: const Text('Confirm'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }
 
 class DashboardScreen extends StatelessWidget {
@@ -113,7 +315,7 @@ class DashboardScreen extends StatelessWidget {
           Container(
             margin: const EdgeInsets.only(right: 16),
             child: OutlinedButton(
-              onPressed: () {},
+              onPressed: () => _showLanguagePicker(context, appState),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0x33005440)),
                 shape: RoundedRectangleBorder(
@@ -125,7 +327,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
               ),
               child: Text(
-                'English',
+                appState.language.nativeName,
                 style: BirrTheme.getLabelBold(
                   context,
                 ).copyWith(color: BirrTheme.primary),
@@ -146,7 +348,7 @@ class DashboardScreen extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Good morning,',
+                  appState.t(_greetingKeyForNow()),
                   style: BirrTheme.getBodyMd(
                     context,
                   ).copyWith(color: BirrTheme.onSurfaceVariant),
@@ -188,7 +390,7 @@ class DashboardScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'TOTAL INVESTED',
+                            appState.t('totalInvested'),
                             style: BirrTheme.getLabelBold(context).copyWith(
                               color: Colors.white.withValues(alpha: 0.8),
                               letterSpacing: 1.0,
@@ -214,7 +416,7 @@ class DashboardScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Expected Return',
+                                      appState.t('expectedReturn'),
                                       style: BirrTheme.getLabelMd(context)
                                           .copyWith(
                                             color: Colors.white.withValues(
@@ -239,7 +441,7 @@ class DashboardScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      'Next Maturity',
+                                      appState.t('nextMaturity'),
                                       style: BirrTheme.getLabelMd(context)
                                           .copyWith(
                                             color: Colors.white.withValues(
@@ -249,7 +451,8 @@ class DashboardScreen extends StatelessWidget {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      '${appState.nextMaturityDays} Days',
+                                      '${appState.nextMaturityDays} '
+                                      '${appState.t('days')}',
                                       style: BirrTheme.getHeadlineMd(context)
                                           .copyWith(
                                             color: const Color(0xFF9AEDCF),
@@ -261,6 +464,36 @@ class DashboardScreen extends StatelessWidget {
                               ),
                             ],
                           ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            child: OutlinedButton.icon(
+                              onPressed: () =>
+                                  _showWithdrawSheet(context, appState),
+                              icon: const Icon(
+                                Icons.arrow_downward,
+                                size: 16,
+                                color: Colors.white,
+                              ),
+                              label: Text(
+                                appState.t('withdraw'),
+                                style: BirrTheme.getLabelBold(
+                                  context,
+                                ).copyWith(color: Colors.white),
+                              ),
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 10,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ],
@@ -268,7 +501,7 @@ class DashboardScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  'Treasury bill pools',
+                  appState.t('treasuryBillPools'),
                   style: BirrTheme.getHeadlineMd(
                     context,
                   ).copyWith(fontWeight: FontWeight.w700),
@@ -367,9 +600,7 @@ class DashboardScreen extends StatelessWidget {
                     ),
                   )
                 else
-                  ...appState.holdings.map(
-                    (h) => _HoldingCard(holding: h),
-                  ),
+                  ...appState.holdings.map((h) => _HoldingCard(holding: h)),
               ],
             ),
           ),
@@ -518,8 +749,6 @@ class _HoldingStat extends StatelessWidget {
   }
 }
 
-enum InvestBondCategory { treasuryBills, commercialBonds, otherBonds }
-
 enum InvestReleaseFilter { all, recent, expired }
 
 enum InvestProfitFilter { all, highestFirst, lowestFirst }
@@ -534,33 +763,18 @@ class InvestMarketScreen extends StatefulWidget {
 }
 
 class _InvestMarketScreenState extends State<InvestMarketScreen> {
-  InvestBondCategory? _categoryFilter;
+  BondCategory? _categoryFilter;
   InvestReleaseFilter _releaseFilter = InvestReleaseFilter.all;
   InvestProfitFilter _profitFilter = InvestProfitFilter.all;
   InvestEntryFilter _entryFilter = InvestEntryFilter.all;
 
-  InvestBondCategory _categorizePool(TBillPool pool) {
-    final searchableText = '${pool.id} ${pool.title} ${pool.type}'
-        .toLowerCase();
-    if (searchableText.contains('treasury') ||
-        searchableText.contains('bill') ||
-        searchableText.contains('tbill')) {
-      return InvestBondCategory.treasuryBills;
-    }
-    if (searchableText.contains('commercial bond') ||
-        searchableText.contains('commercial')) {
-      return InvestBondCategory.commercialBonds;
-    }
-    return InvestBondCategory.otherBonds;
-  }
-
-  String _categoryLabel(InvestBondCategory category) {
+  String _categoryLabel(BondCategory category) {
     switch (category) {
-      case InvestBondCategory.treasuryBills:
+      case BondCategory.treasuryBills:
         return 'Treasury Bills';
-      case InvestBondCategory.commercialBonds:
+      case BondCategory.commercialBonds:
         return 'Commercial Bonds';
-      case InvestBondCategory.otherBonds:
+      case BondCategory.otherBonds:
         return 'Other Bonds';
     }
   }
@@ -614,7 +828,7 @@ class _InvestMarketScreenState extends State<InvestMarketScreen> {
     if (selectedCategory == null) {
       return true;
     }
-    return _categorizePool(pool) == selectedCategory;
+    return pool.category == selectedCategory;
   }
 
   int _comparePools(TBillPool a, TBillPool b) {
@@ -761,7 +975,7 @@ class _InvestMarketScreenState extends State<InvestMarketScreen> {
                               setSheetState(() => selectedCategory = null);
                             },
                           ),
-                          ...InvestBondCategory.values.map(
+                          ...BondCategory.values.map(
                             (category) => ChoiceChip(
                               label: Text(_categoryLabel(category)),
                               selected: selectedCategory == category,
@@ -1008,9 +1222,9 @@ class _InvestMarketScreenState extends State<InvestMarketScreen> {
                         itemCount: filteredPools.length,
                         itemBuilder: (context, index) {
                           final pool = filteredPools[index];
-                          final category = _categorizePool(pool);
+                          final category = pool.category;
                           final isTreasury =
-                              category == InvestBondCategory.treasuryBills;
+                              category == BondCategory.treasuryBills;
 
                           return Container(
                             margin: const EdgeInsets.only(bottom: 16),
@@ -1540,7 +1754,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         context,
                         icon: Icons.phone_iphone,
                         title: 'Phone Number',
-                        value: appState.profile?.phoneNumber ?? 'Not provided',
+                        value:
+                            appState.profile?.phoneNumber ??
+                            appState.telebirrNumber ??
+                            'Not provided',
                       ),
                     ],
                   ),

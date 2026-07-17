@@ -18,7 +18,6 @@ class _ConnectTelebirrScreenState extends State<ConnectTelebirrScreen> {
   final _formKey = GlobalKey<FormState>();
 
   bool _isLoading = false;
-  bool _isSuccess = false;
 
   @override
   void initState() {
@@ -44,12 +43,11 @@ class _ConnectTelebirrScreenState extends State<ConnectTelebirrScreen> {
 
       // Simulate connection delay
       Future.delayed(const Duration(milliseconds: 1500), () {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-            _isSuccess = true;
-          });
-        }
+        if (!mounted) return;
+        setState(() {
+          _isLoading = false;
+        });
+        _proceedToKYC();
       });
     }
   }
@@ -95,7 +93,7 @@ class _ConnectTelebirrScreenState extends State<ConnectTelebirrScreen> {
             ),
             child: SizedBox(
               height: MediaQuery.of(context).size.height - 120,
-              child: _isSuccess ? _buildSuccessState() : _buildFormState(),
+              child: _buildFormState(),
             ),
           ),
         ),
@@ -173,10 +171,11 @@ class _ConnectTelebirrScreenState extends State<ConnectTelebirrScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(
-                        Icons.account_balance_wallet,
-                        size: 48,
-                        color: BirrTheme.primary,
+                      Image.asset(
+                        'lib/assets/telebirr.jpg',
+                        width: 48,
+                        height: 48,
+                        fit: BoxFit.contain,
                       ),
                       const SizedBox(height: 8.0),
                       Text(
@@ -302,113 +301,6 @@ class _ConnectTelebirrScreenState extends State<ConnectTelebirrScreen> {
           const SizedBox(height: 16.0),
         ],
       ),
-    );
-  }
-
-  Widget _buildSuccessState() {
-    final rawNum = _telebirrController.text.trim();
-    final safeRaw = rawNum.length >= 4 ? rawNum : rawNum.padRight(4, '0');
-    final obfuscatedNum =
-        '+251 ${safeRaw.substring(0, 1)}XX XXX ${safeRaw.substring(safeRaw.length - 3)}';
-
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        const Spacer(),
-
-        // Dynamic green checkmark circle
-        Center(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Container(
-                width: 130,
-                height: 130,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: BirrTheme.primary.withValues(alpha: 0.08),
-                ),
-              ),
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: BirrTheme.primary.withValues(alpha: 0.15),
-                ),
-                child: const Icon(
-                  Icons.check_circle,
-                  color: BirrTheme.primary,
-                  size: 64,
-                ),
-              ),
-            ],
-          ),
-        ),
-
-        const SizedBox(height: 32.0),
-
-        Text(
-          'Wallet connected',
-          style: BirrTheme.getHeadlineLg(
-            context,
-          ).copyWith(color: BirrTheme.primary, fontWeight: FontWeight.w700),
-        ),
-        const SizedBox(height: 12.0),
-
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-          decoration: BoxDecoration(
-            color: BirrTheme.surfaceContainer,
-            borderRadius: BorderRadius.circular(100.0),
-          ),
-          child: Text(
-            obfuscatedNum,
-            style: BirrTheme.getBodyLg(context).copyWith(
-              fontWeight: FontWeight.bold,
-              color: BirrTheme.onSurfaceVariant,
-            ),
-          ),
-        ),
-
-        const SizedBox(height: 24.0),
-
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Text(
-            "You're all set! You can now use your Telebirr balance to invest in high-yield money market pools.",
-            textAlign: TextAlign.center,
-            style: BirrTheme.getBodyMd(
-              context,
-            ).copyWith(color: BirrTheme.onSurfaceVariant, height: 1.4),
-          ),
-        ),
-
-        const Spacer(),
-
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: _proceedToKYC,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: BirrTheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12.0),
-              ),
-              elevation: 0,
-            ),
-            child: Text(
-              'Continue',
-              style: BirrTheme.getHeadlineMdMobile(
-                context,
-              ).copyWith(color: Colors.white, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-        const SizedBox(height: 16.0),
-      ],
     );
   }
 }

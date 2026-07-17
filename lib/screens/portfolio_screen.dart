@@ -6,12 +6,279 @@ import '../models/investment_pool.dart';
 import 'invest_detail_screen.dart';
 import 'dashboard_screen.dart';
 
-class PortfolioScreen extends StatelessWidget {
+String _formatWithdrawalDate(DateTime value) {
+  const months = [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
+  return '${months[value.month - 1]} ${value.day}, ${value.year}';
+}
+
+enum HoldingYieldFilter { all, highestFirst, lowestFirst }
+
+enum HoldingMaturityFilter { all, endingSoonest, longestRemaining }
+
+class PortfolioScreen extends StatefulWidget {
   const PortfolioScreen({super.key});
+
+  @override
+  State<PortfolioScreen> createState() => _PortfolioScreenState();
+}
+
+class _PortfolioScreenState extends State<PortfolioScreen> {
+  BondCategory? _categoryFilter;
+  HoldingYieldFilter _yieldFilter = HoldingYieldFilter.all;
+  HoldingMaturityFilter _maturityFilter = HoldingMaturityFilter.all;
+
+  bool get _hasActiveFilters =>
+      _categoryFilter != null ||
+      _yieldFilter != HoldingYieldFilter.all ||
+      _maturityFilter != HoldingMaturityFilter.all;
+
+  String _categoryLabel(BondCategory category) {
+    switch (category) {
+      case BondCategory.treasuryBills:
+        return 'Treasury Bills';
+      case BondCategory.commercialBonds:
+        return 'Commercial Bonds';
+      case BondCategory.otherBonds:
+        return 'Other Bonds';
+    }
+  }
+
+  String _yieldLabel(HoldingYieldFilter filter) {
+    switch (filter) {
+      case HoldingYieldFilter.all:
+        return 'Any yield';
+      case HoldingYieldFilter.highestFirst:
+        return 'Highest yield first';
+      case HoldingYieldFilter.lowestFirst:
+        return 'Lowest yield first';
+    }
+  }
+
+  String _maturityLabel(HoldingMaturityFilter filter) {
+    switch (filter) {
+      case HoldingMaturityFilter.all:
+        return 'Any maturity';
+      case HoldingMaturityFilter.endingSoonest:
+        return 'Ending soonest';
+      case HoldingMaturityFilter.longestRemaining:
+        return 'Longest remaining';
+    }
+  }
+
+  List<Holding> _filteredHoldings(List<Holding> holdings) {
+    var filtered = holdings.where((h) {
+      if (_categoryFilter != null && h.category != _categoryFilter) {
+        return false;
+      }
+      return true;
+    }).toList();
+
+    if (_yieldFilter != HoldingYieldFilter.all) {
+      filtered.sort((a, b) {
+        return _yieldFilter == HoldingYieldFilter.highestFirst
+            ? b.yieldRate.compareTo(a.yieldRate)
+            : a.yieldRate.compareTo(b.yieldRate);
+      });
+    }
+
+    if (_maturityFilter != HoldingMaturityFilter.all) {
+      filtered.sort((a, b) {
+        return _maturityFilter == HoldingMaturityFilter.endingSoonest
+            ? a.daysRemaining.compareTo(b.daysRemaining)
+            : b.daysRemaining.compareTo(a.daysRemaining);
+      });
+    }
+
+    return filtered;
+  }
+
+  void _resetFilters() {
+    setState(() {
+      _categoryFilter = null;
+      _yieldFilter = HoldingYieldFilter.all;
+      _maturityFilter = HoldingMaturityFilter.all;
+    });
+  }
+
+  void _openHoldingsFilterSheet() {
+    var selectedCategory = _categoryFilter;
+    var selectedYield = _yieldFilter;
+    var selectedMaturity = _maturityFilter;
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return SafeArea(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: BirrTheme.surface,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                  boxShadow: BirrTheme.softShadow,
+                ),
+                padding: const EdgeInsets.fromLTRB(20, 14, 20, 24),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Center(
+                        child: Container(
+                          width: 42,
+                          height: 4,
+                          decoration: BoxDecoration(
+                            color: BirrTheme.outlineVariant,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        children: [
+                          Text(
+                            'Filter assets',
+                            style: BirrTheme.getHeadlineMd(
+                              context,
+                            ).copyWith(fontWeight: FontWeight.w800),
+                          ),
+                          const Spacer(),
+                          TextButton(
+                            onPressed: () {
+                              setSheetState(() {
+                                selectedCategory = null;
+                                selectedYield = HoldingYieldFilter.all;
+                                selectedMaturity = HoldingMaturityFilter.all;
+                              });
+                            },
+                            child: const Text('Reset'),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Text('Bond type', style: BirrTheme.getLabelBold(context)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('All'),
+                            selected: selectedCategory == null,
+                            onSelected: (_) {
+                              setSheetState(() => selectedCategory = null);
+                            },
+                          ),
+                          ...BondCategory.values.map(
+                            (category) => ChoiceChip(
+                              label: Text(_categoryLabel(category)),
+                              selected: selectedCategory == category,
+                              onSelected: (_) {
+                                setSheetState(() {
+                                  selectedCategory = category;
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Yield', style: BirrTheme.getLabelBold(context)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: HoldingYieldFilter.values.map((filter) {
+                          return ChoiceChip(
+                            label: Text(_yieldLabel(filter)),
+                            selected: selectedYield == filter,
+                            onSelected: (_) {
+                              setSheetState(() => selectedYield = filter);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 20),
+                      Text('Maturity', style: BirrTheme.getLabelBold(context)),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: HoldingMaturityFilter.values.map((filter) {
+                          return ChoiceChip(
+                            label: Text(_maturityLabel(filter)),
+                            selected: selectedMaturity == filter,
+                            onSelected: (_) {
+                              setSheetState(() => selectedMaturity = filter);
+                            },
+                          );
+                        }).toList(),
+                      ),
+                      const SizedBox(height: 24),
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            setState(() {
+                              _categoryFilter = selectedCategory;
+                              _yieldFilter = selectedYield;
+                              _maturityFilter = selectedMaturity;
+                            });
+                            Navigator.of(sheetContext).pop();
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: BirrTheme.primary,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          child: const Text('Apply filters'),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildActiveFilterChip(String label, VoidCallback onClear) {
+    return Chip(
+      label: Text(label),
+      deleteIcon: const Icon(Icons.close, size: 16),
+      onDeleted: onClear,
+      backgroundColor: BirrTheme.surfaceContainerLow,
+      side: BorderSide(color: BirrTheme.outlineVariant.withValues(alpha: 0.4)),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final appState = Provider.of<AppState>(context);
+    final filteredHoldings = _filteredHoldings(appState.holdings);
 
     // Calculate actual earnings. We mock total earned to be roughly 6.2% of invested or derived from holdings expected yields
     double totalEarned = 0.0;
@@ -31,6 +298,14 @@ class PortfolioScreen extends StatelessWidget {
             context,
           ).copyWith(fontWeight: FontWeight.bold),
         ),
+        actions: [
+          if (_hasActiveFilters)
+            IconButton(
+              onPressed: _resetFilters,
+              icon: const Icon(Icons.clear_all),
+              tooltip: 'Clear filters',
+            ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -258,13 +533,64 @@ class PortfolioScreen extends StatelessWidget {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    Icon(
-                      Icons.filter_list,
-                      color: BirrTheme.onSurfaceVariant,
-                      size: 18,
+                    GestureDetector(
+                      onTap: _openHoldingsFilterSheet,
+                      child: Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          Icon(
+                            Icons.filter_list,
+                            color: _hasActiveFilters
+                                ? BirrTheme.primary
+                                : BirrTheme.onSurfaceVariant,
+                            size: 18,
+                          ),
+                          if (_hasActiveFilters)
+                            Positioned(
+                              right: -4,
+                              top: -4,
+                              child: Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: BirrTheme.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
+                if (_hasActiveFilters) ...[
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      if (_categoryFilter != null)
+                        _buildActiveFilterChip(
+                          _categoryLabel(_categoryFilter!),
+                          () => setState(() => _categoryFilter = null),
+                        ),
+                      if (_yieldFilter != HoldingYieldFilter.all)
+                        _buildActiveFilterChip(
+                          _yieldLabel(_yieldFilter),
+                          () => setState(
+                            () => _yieldFilter = HoldingYieldFilter.all,
+                          ),
+                        ),
+                      if (_maturityFilter != HoldingMaturityFilter.all)
+                        _buildActiveFilterChip(
+                          _maturityLabel(_maturityFilter),
+                          () => setState(
+                            () => _maturityFilter = HoldingMaturityFilter.all,
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 12),
 
                 if (appState.holdings.isEmpty)
@@ -285,8 +611,26 @@ class PortfolioScreen extends StatelessWidget {
                       ),
                     ),
                   )
+                else if (filteredHoldings.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: BirrTheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'No active assets match the selected filters.',
+                        style: BirrTheme.getBodyMd(
+                          context,
+                        ).copyWith(color: BirrTheme.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
                 else
-                  ...appState.holdings.map((holding) {
+                  ...filteredHoldings.map((holding) {
                     return Container(
                       margin: const EdgeInsets.only(bottom: 12),
                       padding: const EdgeInsets.all(16),
@@ -542,6 +886,100 @@ class PortfolioScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                const SizedBox(height: 24),
+
+                // Withdrawals section
+                Text(
+                  'WITHDRAWALS',
+                  style: BirrTheme.getLabelBold(context).copyWith(
+                    color: BirrTheme.onSurfaceVariant,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                if (appState.withdrawals.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: BirrTheme.surfaceContainerLow,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'No withdrawals yet.',
+                        style: BirrTheme.getBodyMd(
+                          context,
+                        ).copyWith(color: BirrTheme.onSurfaceVariant),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  )
+                else
+                  ...appState.withdrawals.map((withdrawal) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: BirrTheme.surfaceContainerLowest,
+                        borderRadius: BorderRadius.circular(12),
+                        border: const Border(
+                          left: BorderSide(
+                            color: BirrTheme.secondary,
+                            width: 4,
+                          ),
+                        ),
+                        boxShadow: BirrTheme.softShadow,
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: BirrTheme.secondary.withValues(
+                                    alpha: 0.1,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.arrow_downward,
+                                  color: BirrTheme.secondary,
+                                  size: 18,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'ETB ${withdrawal.amount.toStringAsFixed(0)}',
+                                    style: BirrTheme.getHeadlineMdMobile(
+                                      context,
+                                    ).copyWith(fontWeight: FontWeight.bold),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Withdrawn to Telebirr',
+                                    style: BirrTheme.getLabelMd(context),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                          Text(
+                            _formatWithdrawalDate(withdrawal.timestamp),
+                            style: BirrTheme.getLabelMd(
+                              context,
+                            ).copyWith(fontStyle: FontStyle.italic),
+                          ),
+                        ],
+                      ),
+                    );
+                  }),
                 const SizedBox(height: 24),
 
                 // Explore markets section

@@ -1,3 +1,7 @@
+# Secrets — never commit real API keys/credentials. Copy .env.example to
+# .env locally and fill in real values.
+.env
+
 # Miscellaneous
 *.class
 *.log

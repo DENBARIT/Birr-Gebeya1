@@ -1,3 +1,19 @@
+enum BondCategory { treasuryBills, commercialBonds, otherBonds }
+
+/// Shared classifier so pools and holdings bucket into the same categories.
+BondCategory categorizeBondText(String searchableText) {
+  final text = searchableText.toLowerCase();
+  if (text.contains('treasury') ||
+      text.contains('bill') ||
+      text.contains('tbill')) {
+    return BondCategory.treasuryBills;
+  }
+  if (text.contains('commercial')) {
+    return BondCategory.commercialBonds;
+  }
+  return BondCategory.otherBonds;
+}
+
 class TBillPool {
   final String id;
   final String title;
@@ -16,6 +32,22 @@ class TBillPool {
     required this.type,
     required this.termInDays,
   });
+
+  /// Inferred from [id]/[title]/[type] text — keeps the invest-market
+  /// filters and the investment detail badge classifying pools the same way.
+  BondCategory get category => categorizeBondText('$id $title $type');
+
+  /// Singular label for a single pool (e.g. the investment detail badge).
+  String get categoryBadgeLabel {
+    switch (category) {
+      case BondCategory.treasuryBills:
+        return 'Treasury Bill';
+      case BondCategory.commercialBonds:
+        return 'Commercial Bond';
+      case BondCategory.otherBonds:
+        return 'Other Bond';
+    }
+  }
 }
 
 class Holding {
@@ -40,9 +72,28 @@ class Holding {
   });
 
   int get daysRemaining {
-    final difference = purchaseDate.add(Duration(days: termInDays)).difference(DateTime.now()).inDays;
+    final difference = purchaseDate
+        .add(Duration(days: termInDays))
+        .difference(DateTime.now())
+        .inDays;
     return difference < 0 ? 0 : difference;
   }
+
+  /// Same classifier as [TBillPool.category], applied to a holding's own
+  /// [poolId]/[title] text.
+  BondCategory get category => categorizeBondText('$poolId $title');
+}
+
+class WithdrawalRecord {
+  final String id;
+  final double amount;
+  final DateTime timestamp;
+
+  WithdrawalRecord({
+    required this.id,
+    required this.amount,
+    required this.timestamp,
+  });
 }
 
 class AppNotification {

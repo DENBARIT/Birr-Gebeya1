@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../theme/design_system.dart';
 import '../models/app_state.dart';
@@ -13,9 +14,7 @@ class KycProfileSetupScreen extends StatefulWidget {
 
 class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
   final _formKey = GlobalKey<FormState>();
-  final TextEditingController _nameController = TextEditingController(
-    text: 'Abebe',
-  );
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _dobController = TextEditingController();
   final TextEditingController _nationalIdController = TextEditingController();
@@ -167,10 +166,7 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: BirrTheme.onSurface),
-          onPressed: () => Navigator.pop(context),
-        ),
+        automaticallyImplyLeading: false,
         title: Text(
           'Profile Setup',
           style: BirrTheme.getHeadlineLgMobile(
@@ -305,14 +301,19 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                   const SizedBox(height: 8.0),
                   TextFormField(
                     controller: _nationalIdController,
-                    keyboardType: TextInputType.text,
-                    textCapitalization: TextCapitalization.characters,
+                    keyboardType: TextInputType.number,
+                    maxLength: 16,
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(16),
+                    ],
                     validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
+                      final v = value?.trim() ?? '';
+                      if (v.isEmpty) {
                         return 'Please enter your National ID number';
                       }
-                      if (value.trim().length < 6) {
-                        return 'Please enter a valid National ID';
+                      if (v.length != 16) {
+                        return 'National ID must be exactly 16 digits';
                       }
                       return null;
                     },
@@ -320,8 +321,9 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                       context,
                     ).copyWith(fontWeight: FontWeight.w600),
                     decoration: const InputDecoration(
-                      hintText: 'Enter your National ID number',
+                      hintText: 'Enter your 16-digit National ID number',
                       prefixIcon: Icon(Icons.credit_card_outlined),
+                      counterText: '',
                     ),
                   ),
 
@@ -338,9 +340,7 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                     value: _selectedRegion,
                     isExpanded: true,
                     items: _ethiopianRegions
-                        .map(
-                          (r) => DropdownMenuItem(value: r, child: Text(r)),
-                        )
+                        .map((r) => DropdownMenuItem(value: r, child: Text(r)))
                         .toList(),
                     onChanged: (value) {
                       setState(() {

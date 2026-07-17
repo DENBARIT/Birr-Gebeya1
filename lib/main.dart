@@ -45,6 +45,12 @@ Future<void> main() async {
       anonKey: supabaseKey,
       // disable automatic auth persistence to keep behavior explicit
       authCallbackUrlHostname: 'login-callback',
+      // supabase_flutter's internal debug logger defaults to kDebugMode
+      // (always on for `flutter run`) and dumps the full session — access
+      // token, refresh token, everything — to the console on every auth
+      // state change. Force it off explicitly so real sessions never land
+      // in a terminal, log file, or bug report.
+      debug: false,
     );
     debugPrint('Supabase initialized successfully');
   } catch (e, st) {

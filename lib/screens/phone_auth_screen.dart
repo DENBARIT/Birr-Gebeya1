@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -6,7 +8,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/app_state.dart';
 import '../services/auth_service.dart';
-import '../services/email_otp_service.dart';
 import '../services/supabase_app_repository.dart';
 import '../theme/design_system.dart';
 import '../widgets/brand_logo.dart';
@@ -108,19 +109,19 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         'Auth submit: action=$_authAction method=$_authMethod contact=$contactValue',
       );
       if (_authAction == AuthAction.signUp) {
-        // Check 1: profiles table (covers fully-onboarded users).
+        // Profiles-table check covers fully-onboarded users, with no side
+        // effects. We used to also probe auth.users via a signInWithOtp
+        // call to catch users who verified but never onboarded — but that
+        // probe itself sends a real login e-mail whenever the address
+        // already exists, silently burning through the project's e-mail
+        // quota on every sign-up attempt. Instead we let the sign-up call
+        // below fail naturally with an "already registered" error for that
+        // case, with no extra e-mail sent just to check.
         final profileExists = _authMethod == AuthMethod.email
             ? await _appRepository.profileExistsByEmail(contactValue)
             : await _appRepository.profileExistsByPhoneNumber(contactValue);
 
-        // Check 2 (email only): Supabase auth.users — catches users who
-        // verified their OTP but never completed onboarding, so they have
-        // no profiles row yet.
-        final authExists = (!profileExists && _authMethod == AuthMethod.email)
-            ? await _appRepository.emailExistsInAuth(contactValue)
-            : false;
-
-        if (profileExists || authExists) {
+        if (profileExists) {
           if (!mounted) return;
           setState(() => _isSubmitting = false);
           await _showAlreadyRegisteredDialog(contactValue);
@@ -133,10 +134,23 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
         if (isEmail) {
           // Use password-based sign-up so the password is stored in Supabase
           // Auth and sign-in with password works correctly later.
-          await _auth.sendEmailSignupOtp(
-            email: contactValue,
-            password: _passwordController.text.trim(),
-          );
+          try {
+            await _auth.sendEmailSignupOtp(
+              email: contactValue,
+              password: _passwordController.text.trim(),
+            );
+          } on AuthException catch (e) {
+            final alreadyRegistered = e.message.toLowerCase().contains(
+              'already registered',
+            );
+            if (alreadyRegistered) {
+              if (!mounted) return;
+              setState(() => _isSubmitting = false);
+              await _showAlreadyRegisteredDialog(contactValue);
+              return;
+            }
+            rethrow;
+          }
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -177,10 +191,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               },
               onResendOtp: () async {
                 if (!isEmail) return;
-                await _auth.sendEmailSignupOtp(
-                  email: contactValue,
-                  password: _passwordController.text.trim(),
-                );
+                await _auth.resendEmailSignupOtp(email: contactValue);
               },
             ),
           ),
@@ -243,7 +254,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 }
               },
               onResendOtp: () async {
-                await _auth.sendPasswordResetOtp(email: email, redirectTo: redirectTo);
+                await _auth.sendPasswordResetOtp(
+                  email: email,
+                  redirectTo: redirectTo,
+                );
               },
             ),
           ),
@@ -303,11 +317,23 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
           backgroundColor: BirrTheme.error,
         ),
       );
+    } on SocketException {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Cannot reach the server. Check your internet connection, DNS, or VPN and try again.',
+          ),
+          backgroundColor: BirrTheme.error,
+        ),
+      );
     } catch (error) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Error: $error'),
+          content: const Text(
+            'Sign-in failed. Please check your connection and try again.',
+          ),
           backgroundColor: BirrTheme.error,
         ),
       );
@@ -416,9 +442,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 color: Color(0xFF4B5563),
               ),
               children: [
-                const TextSpan(
-                  text: 'An account registered with\n',
-                ),
+                const TextSpan(text: 'An account registered with\n'),
                 TextSpan(
                   text: email,
                   style: const TextStyle(
@@ -434,8 +458,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
             ),
           ),
           actionsAlignment: MainAxisAlignment.spaceEvenly,
-          actionsPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          actionsPadding: const EdgeInsets.symmetric(
+            horizontal: 12,
+            vertical: 12,
+          ),
           actions: [
             OutlinedButton(
               style: OutlinedButton.styleFrom(
@@ -443,8 +469,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
               ),
               onPressed: () {
                 Navigator.of(dialogContext).pop();
@@ -462,8 +490,10 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 10,
+                ),
                 elevation: 0,
               ),
               onPressed: () {
@@ -598,7 +628,12 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                             ),
                           ),
                         ),
-                        const BrandLogo(size: 128),
+                        const BrandLogo(
+                          size: 128,
+                          showLabel: false,
+                          circular: true,
+                          glimmer: true,
+                        ),
                       ],
                     ),
                   ),
@@ -681,7 +716,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         const SizedBox(height: 4),
                         Text(
                           _authAction == AuthAction.signIn
-                              ? 'Use the logo-inspired sign-in flow with a polished, calm experience.'
+                              ? 'Sign in to keep growing your money with Ethiopian Treasury Bills.'
                               : _authAction == AuthAction.resetPassword
                               ? 'We will verify your email and help you set a new password.'
                               : 'Join Birr Gebeya and verify your profile in a few quick steps.',

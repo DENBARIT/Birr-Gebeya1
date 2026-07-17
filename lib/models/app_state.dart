@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'investment_pool.dart';
+import '../localization/app_translations.dart';
 import '../services/supabase_app_repository.dart';
 
 class UserProfile {
@@ -10,7 +12,41 @@ class UserProfile {
 }
 
 class AppState extends ChangeNotifier {
-  String userName = "Abebe";
+  AppState() {
+    _loadLanguage();
+  }
+
+  static const _languagePrefsKey = 'app_language';
+
+  AppLanguage language = AppLanguage.english;
+
+  /// Looks up a translated string for the current [language].
+  String t(String key) => tr(language, key);
+
+  Future<void> _loadLanguage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      language = AppLanguageMeta.fromStorageCode(
+        prefs.getString(_languagePrefsKey),
+      );
+      notifyListeners();
+    } catch (_) {
+      // Keep the English default if local storage isn't available.
+    }
+  }
+
+  Future<void> setLanguage(AppLanguage lang) async {
+    language = lang;
+    notifyListeners();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_languagePrefsKey, lang.storageCode);
+    } catch (_) {
+      // Non-fatal: the in-memory selection still applies this session.
+    }
+  }
+
+  String userName = "";
   String? fullName;
   String? telebirrNumber;
   String? nationalId;
@@ -54,21 +90,51 @@ class AppState extends ChangeNotifier {
       type: "Fixed Term",
       termInDays: 182,
     ),
-  ];
-
-  // User's active holdings
-  List<Holding> holdings = [
-    Holding(
-      id: "holding_initial_1",
-      poolId: "28_day_tbill",
-      title: "28-Day T-Bill",
-      investedAmount: 5000.0,
-      expectedReturn: 5312.0,
-      yieldRate: 8.5,
-      purchaseDate: DateTime.now().subtract(const Duration(days: 0)),
-      termInDays: 28,
+    // Commercial Bonds — gives the "Commercial Bonds" filter real examples.
+    TBillPool(
+      id: "commercial_bond_90",
+      title: "90-Day Commercial Bond",
+      yieldRate: 11.2,
+      progress: 0.62,
+      minInvestment: 2000.0,
+      type: "Fixed Term",
+      termInDays: 90,
+    ),
+    TBillPool(
+      id: "commercial_bond_270",
+      title: "270-Day Commercial Bond",
+      yieldRate: 13.8,
+      progress: 0.4,
+      minInvestment: 15000.0,
+      type: "Fixed Term",
+      termInDays: 270,
+    ),
+    // Other Bonds — gives the "Other Bonds" filter real examples.
+    TBillPool(
+      id: "municipal_bond_180",
+      title: "180-Day Municipal Bond",
+      yieldRate: 9.0,
+      progress: 0.5,
+      minInvestment: 3000.0,
+      type: "Daily Liquidity",
+      termInDays: 180,
+    ),
+    TBillPool(
+      id: "corporate_note_60",
+      title: "60-Day Corporate Note",
+      yieldRate: 7.5,
+      progress: 0.8,
+      minInvestment: 1500.0,
+      type: "Fixed Term",
+      termInDays: 60,
     ),
   ];
+
+  // User's active holdings — starts empty for a newly registered user.
+  List<Holding> holdings = [];
+
+  // User's withdrawal history
+  List<WithdrawalRecord> withdrawals = [];
 
   // User's notification feed
   List<AppNotification> notifications = [
@@ -216,6 +282,15 @@ class AppState extends ChangeNotifier {
       ),
     );
 
+    withdrawals.insert(
+      0,
+      WithdrawalRecord(
+        id: "withdrawal_${DateTime.now().millisecondsSinceEpoch}",
+        amount: amount,
+        timestamp: DateTime.now(),
+      ),
+    );
+
     notifyListeners();
     return true;
   }
@@ -269,14 +344,21 @@ class AppState extends ChangeNotifier {
   }) async {
     this.userName = userName;
     fullName = fullNameValue;
-    telebirrNumber = telebirrNumberValue;
-    nationalId = nationalIdValue;
-    dateOfBirth = dateOfBirthValue;
-    gender = genderValue;
-    region = regionValue;
-    avatarType = avatarTypeValue;
-    avatarValue = avatarValueValue;
-    profile = UserProfile(email: email, phoneNumber: phoneNumber);
+    // Omitted (null) fields preserve whatever was already set, rather than
+    // wiping it out — callers like the KYC form only pass the fields they
+    // collect, and shouldn't clear e.g. the Telebirr number set moments
+    // earlier by the Telebirr-connect step.
+    telebirrNumber = telebirrNumberValue ?? telebirrNumber;
+    nationalId = nationalIdValue ?? nationalId;
+    dateOfBirth = dateOfBirthValue ?? dateOfBirth;
+    gender = genderValue ?? gender;
+    region = regionValue ?? region;
+    avatarType = avatarTypeValue ?? avatarType;
+    avatarValue = avatarValueValue ?? avatarValue;
+    profile = UserProfile(
+      email: email ?? profile?.email,
+      phoneNumber: phoneNumber ?? profile?.phoneNumber,
+    );
     notifyListeners();
 
     // Persist to Supabase when a session exists (no-op if not signed in).

@@ -11,16 +11,22 @@ class ChatMessage {
   const ChatMessage({required this.role, required this.text});
 }
 
-/// Talks to the Groq API (OpenAI-compatible chat completions endpoint).
-/// Powers the in-app investment-advisor chatbot.
+/// Talks to the Gemini API via its OpenAI-compatible chat completions
+/// endpoint. Powers the in-app investment-advisor chatbot.
 ///
 /// Security note: this calls the API directly with the key from `.env`, which
 /// is fine for development but ships the key inside the app. For production,
 /// proxy these requests through a backend (e.g. a Supabase Edge Function) so
 /// the key never leaves the server.
 class ChatService {
-  static const String _model = 'llama-3.3-70b-versatile';
-  static const String _endpointPath = '/openai/v1/chat/completions';
+  // 'gemini-2.5-flash' 404s for this key ("no longer available to new
+  // users" per Google's own error) despite being listed by the models API.
+  // 'gemini-flash-latest' routes correctly but has been returning 503
+  // (over capacity) on Google's side during testing. 'gemini-flash-lite-latest'
+  // is the '-latest' alias that has actually responded successfully — swap
+  // if it starts erroring too, since these aliases rotate independently.
+  static const String _model = 'gemini-flash-lite-latest';
+  static const String _endpointPath = '/v1beta/openai/chat/completions';
 
   // Stable, cacheable advisor instructions (no per-user data here, so the
   // prompt-cache prefix stays identical across turns and users).
@@ -55,7 +61,7 @@ Style and rules:
 ''';
 
   bool get isConfigured {
-    final key = dotenv.env['GROK_API_KEY'];
+    final key = dotenv.env['GEMINI_API_KEY'];
     return key != null && key.trim().isNotEmpty;
   }
 
@@ -66,10 +72,10 @@ Style and rules:
     required List<ChatMessage> history,
     required String portfolioContext,
   }) async {
-    final apiKey = dotenv.env['GROK_API_KEY']?.trim() ?? '';
+    final apiKey = dotenv.env['GEMINI_API_KEY']?.trim() ?? '';
     if (apiKey.isEmpty) {
       throw const ChatException(
-        'The AI advisor is not configured yet. Add GROK_API_KEY to your '
+        'The AI advisor is not configured yet. Add GEMINI_API_KEY to your '
         '.env file to enable it.',
       );
     }
@@ -99,7 +105,7 @@ Style and rules:
     try {
       resp = await http
           .post(
-            Uri.https('api.groq.com', _endpointPath),
+            Uri.https('generativelanguage.googleapis.com', _endpointPath),
             headers: {
               'content-type': 'application/json',
               'Authorization': 'Bearer $apiKey',
@@ -132,7 +138,7 @@ Style and rules:
     // Map common API errors to friendly messages.
     if (resp.statusCode == 401) {
       throw const ChatException(
-        'The AI advisor key was rejected. Check GROK_API_KEY in your .env.',
+        'The AI advisor key was rejected. Check GEMINI_API_KEY in your .env.',
       );
     }
     if (resp.statusCode == 429) {

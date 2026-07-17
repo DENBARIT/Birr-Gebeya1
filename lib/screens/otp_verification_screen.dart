@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -147,6 +148,10 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       );
     } on AuthException catch (e) {
       _showError(e.message);
+    } on SocketException {
+      _showError(
+        'Cannot reach the verification service. Check your internet connection and try again.',
+      );
     } catch (e) {
       _showError('Could not resend the code. Please try again.');
     }
@@ -193,6 +198,11 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
       Navigator.of(context).pop(true);
     } on AuthException catch (e) {
       _showError(e.message);
+      _clearInputs();
+    } on SocketException {
+      _showError(
+        'Cannot reach the verification service. Check your internet connection and try again.',
+      );
       _clearInputs();
     } catch (e) {
       _showError('Verification failed. Please check the code and try again.');
