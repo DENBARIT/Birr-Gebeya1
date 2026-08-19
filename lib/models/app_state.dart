@@ -306,6 +306,58 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     return true;
   }
+  // ====================
+  // Admin Pool Management
+  // ====================
+
+  void addPool(TBillPool pool) {
+    pools.add(pool);
+
+    notifications.insert(
+      0,
+      AppNotification(
+        id: "notif_pool_${DateTime.now().millisecondsSinceEpoch}",
+        title: "New Pool Published",
+        description: "${pool.title} has been added.",
+        timestamp: DateTime.now(),
+      ),
+    );
+
+    notifyListeners();
+  }
+
+  void updatePool(
+    String id, {
+    required String title,
+    required double yieldRate,
+    required int termInDays,
+    required double minInvestment,
+    required String type,
+  }) {
+    final index = pools.indexWhere((p) => p.id == id);
+
+    if (index == -1) return;
+
+    final existing = pools[index];
+
+    pools[index] = TBillPool(
+      id: existing.id,
+      title: title,
+      yieldRate: yieldRate,
+      progress: existing.progress,
+      minInvestment: minInvestment,
+      type: type,
+      termInDays: termInDays,
+    );
+
+    notifyListeners();
+  }
+
+  void archivePool(String id) {
+    pools.removeWhere((pool) => pool.id == id);
+
+    notifyListeners();
+  }
 
   void markNotificationAsRead(String id) {
     final idx = notifications.indexWhere((n) => n.id == id);
@@ -436,6 +488,7 @@ class AppState extends ChangeNotifier {
       await SupabaseAppRepository().saveProfile(
         userName: userName,
         fullName: fullName,
+        // telebirrNumber: telebirrNumber,
         telebirrNumber: telebirrNumber,
         nationalId: nationalId,
         region: region,
