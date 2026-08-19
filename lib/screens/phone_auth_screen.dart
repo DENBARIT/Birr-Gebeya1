@@ -10,6 +10,7 @@ import '../models/app_state.dart';
 import '../services/auth_service.dart';
 import '../services/supabase_app_repository.dart';
 import '../theme/design_system.dart';
+import '../utils/log_redact.dart';
 import '../widgets/brand_logo.dart';
 import 'connect_telebirr_screen.dart';
 import 'dashboard_screen.dart';
@@ -106,7 +107,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
 
     try {
       debugPrint(
-        'Auth submit: action=$_authAction method=$_authMethod contact=$contactValue',
+        'Auth submit: action=$_authAction method=$_authMethod contact=${maskContact(contactValue)}',
       );
       if (_authAction == AuthAction.signUp) {
         // Profiles-table check covers fully-onboarded users, with no side
@@ -175,23 +176,30 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
               initialOtp: '',
               autoFillOtp: false,
               onVerifyOtp: (entered) async {
-                if (!isEmail) return false;
-                // Use OtpType.signup so Supabase links the OTP to the
-                // password-based signup and creates the session correctly.
                 try {
-                  final res = await _auth.verifyEmailSignup(
-                    email: contactValue,
-                    token: entered,
-                  );
+                  // Use OtpType.signup so Supabase links the OTP to the
+                  // password-based signup and creates the session correctly.
+                  final res = isEmail
+                      ? await _auth.verifyEmailSignup(
+                          email: contactValue,
+                          token: entered,
+                        )
+                      : await _auth.verifySmsOtp(
+                          phone: e164Phone,
+                          token: entered,
+                        );
                   return res.session != null;
                 } catch (e) {
-                  debugPrint('verifyEmailSignup failed: $e');
+                  debugPrint('OTP verification failed: $e');
                   return false;
                 }
               },
               onResendOtp: () async {
-                if (!isEmail) return;
-                await _auth.resendEmailSignupOtp(email: contactValue);
+                if (isEmail) {
+                  await _auth.resendEmailSignupOtp(email: contactValue);
+                } else {
+                  await _auth.resendSmsOtp(phone: e164Phone);
+                }
               },
             ),
           ),

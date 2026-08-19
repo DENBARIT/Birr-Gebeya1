@@ -5,6 +5,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../services/auth_service.dart';
 import '../theme/design_system.dart';
+import '../utils/log_redact.dart';
 
 /// What the entered code is being verified for.
 enum OtpPurpose { signup, recovery, sms }
@@ -169,7 +170,7 @@ class _OtpVerificationScreenState extends State<OtpVerificationScreen> {
     setState(() => _isVerifying = true);
     try {
       debugPrint(
-        'Verifying OTP for purpose=${widget.purpose} contact=${widget.contactValue}',
+        'Verifying OTP for purpose=${widget.purpose} contact=${maskContact(widget.contactValue)}',
       );
       // Local mode: the caller handles verification (e.g. on-screen code that
       // creates the user on confirm). Falls back to Supabase OTP otherwise.

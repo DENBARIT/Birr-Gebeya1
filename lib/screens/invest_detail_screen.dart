@@ -171,23 +171,34 @@ class _InvestDetailScreenState extends State<InvestDetailScreen> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: ElevatedButton(
-                        onPressed: () {
+                        onPressed: () async {
                           // Perform transaction
                           final appState = Provider.of<AppState>(
                             context,
                             listen: false,
                           );
-                          final success = appState.addInvestment(
+                          final navigator = Navigator.of(context);
+                          final messenger = ScaffoldMessenger.of(context);
+                          final success = await appState.addInvestment(
                             widget.pool,
                             _enteredAmount,
                           );
 
-                          Navigator.pop(context); // Close bottom sheet
+                          navigator.pop(); // Close bottom sheet
 
                           if (success) {
                             setState(() {
                               _showSuccess = true;
                             });
+                          } else {
+                            messenger.showSnackBar(
+                              const SnackBar(
+                                content: Text(
+                                  'Could not place your order. Make sure your '
+                                  'CSD account has been issued, then try again.',
+                                ),
+                              ),
+                            );
                           }
                         },
                         style: ElevatedButton.styleFrom(

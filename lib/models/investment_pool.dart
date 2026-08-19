@@ -76,7 +76,7 @@ class Holding {
         .add(Duration(days: termInDays))
         .difference(DateTime.now())
         .inDays;
-    return difference < 0 ? 0 : difference;
+    return difference  <0 ? 0 : difference;
   }
 
   /// Same classifier as [TBillPool.category], applied to a holding's own

@@ -2,11 +2,13 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../theme/design_system.dart';
 import '../localization/app_translations.dart';
 import '../models/app_state.dart';
 import '../models/investment_pool.dart';
+import '../services/auth_service.dart';
 import 'chatbot_screen.dart';
 import 'invest_detail_screen.dart';
 import 'portfolio_screen.dart';
@@ -35,6 +37,13 @@ class AppNavigationShellState extends State<AppNavigationShell> {
       NotificationsScreen(),
       ProfileScreen(),
     ];
+    // Reached on every path into the main app (sign-in and post-onboarding
+    // sign-up alike), so this is the single hook point that keeps the CSD
+    // account live via Realtime instead of waiting for a manual refresh.
+    final userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      context.read<AppState>().subscribeToProfileUpdates(userId);
+    }
   }
 
   void _onItemTapped(int index) {
@@ -289,7 +298,7 @@ void _showWithdrawSheet(BuildContext context, AppState appState) {
         ),
       );
     },
-  );
+  ).then((_) => amountController.dispose());
 }
 
 class DashboardScreen extends StatelessWidget {
@@ -359,6 +368,29 @@ class DashboardScreen extends StatelessWidget {
                   style: BirrTheme.getHeadlineLg(
                     context,
                   ).copyWith(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  children: [
+                    Icon(
+                      Icons.verified_outlined,
+                      size: 14,
+                      color: appState.csdAccountNumber != null
+                          ? BirrTheme.primary
+                          : BirrTheme.onSurfaceVariant,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      appState.csdAccountNumber != null
+                          ? 'CSD Account: ${appState.csdAccountNumber}'
+                          : 'CSD account pending',
+                      style: BirrTheme.getLabelMd(context).copyWith(
+                        color: appState.csdAccountNumber != null
+                            ? BirrTheme.primary
+                            : BirrTheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 20),
                 Container(
@@ -1369,6 +1401,8 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _signOut(BuildContext context) async {
+    context.read<AppState>().unsubscribeFromProfileUpdates();
+    await AuthService().signOut();
     if (!context.mounted) return;
     Navigator.of(context).pushAndRemoveUntil(
       MaterialPageRoute(builder: (_) => const SplashScreen()),

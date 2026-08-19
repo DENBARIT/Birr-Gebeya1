@@ -7,7 +7,6 @@ import 'package:http/http.dart' as http;
 class ChatMessage {
   final String role; // 'user' | 'assistant'
   final String text;
-
   const ChatMessage({required this.role, required this.text});
 }
 

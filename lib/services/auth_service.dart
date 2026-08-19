@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../utils/log_redact.dart';
+
 // Note: methods below catch SocketException (a genuine connectivity failure
 // raised by the actual Supabase request) purely to log it and show a
 // friendlier message upstream — there is no pre-flight DNS/connectivity
@@ -35,7 +37,7 @@ class AuthService {
     required String password,
   }) async {
     try {
-      debugPrint('AuthService.sendEmailSignupOtp: email=$email');
+      debugPrint('AuthService.sendEmailSignupOtp: email=${maskContact(email)}');
       final res = await _client.auth.signUp(email: email, password: password);
       debugPrint('sendEmailSignupOtp response: ${res.toString()}');
     } on SocketException catch (e, st) {
@@ -54,9 +56,7 @@ class AuthService {
     required String email,
     required String token,
   }) {
-    debugPrint(
-      'AuthService.verifyEmailSignup: email=$email tokenLen=${token.length}',
-    );
+    debugPrint('AuthService.verifyEmailSignup: email=${maskContact(email)}');
     return _client.auth.verifyOTP(
       email: email,
       token: token,
@@ -66,7 +66,9 @@ class AuthService {
 
   Future<void> resendEmailSignupOtp({required String email}) async {
     try {
-      debugPrint('AuthService.resendEmailSignupOtp: email=$email');
+      debugPrint(
+        'AuthService.resendEmailSignupOtp: email=${maskContact(email)}',
+      );
       await _client.auth.resend(type: OtpType.signup, email: email);
     } on SocketException catch (e, st) {
       _logNetworkError('resendEmailSignupOtp', e, st);
@@ -85,7 +87,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    debugPrint('AuthService.signInWithPassword: email=$email');
+    debugPrint('AuthService.signInWithPassword: email=${maskContact(email)}');
     try {
       return await _client.auth.signInWithPassword(
         email: email,
@@ -102,7 +104,7 @@ class AuthService {
   // ---------------------------------------------------------------------------
   Future<void> sendSmsOtp({required String phone}) async {
     try {
-      debugPrint('AuthService.sendSmsOtp: phone=$phone');
+      debugPrint('AuthService.sendSmsOtp: phone=${maskContact(phone)}');
       await _client.auth.signInWithOtp(phone: phone);
     } on SocketException catch (e, st) {
       _logNetworkError('sendSmsOtp', e, st);
@@ -118,9 +120,7 @@ class AuthService {
     required String phone,
     required String token,
   }) {
-    debugPrint(
-      'AuthService.verifySmsOtp: phone=$phone tokenLen=${token.length}',
-    );
+    debugPrint('AuthService.verifySmsOtp: phone=${maskContact(phone)}');
     return _client.auth.verifyOTP(
       phone: phone,
       token: token,
@@ -130,7 +130,7 @@ class AuthService {
 
   Future<void> resendSmsOtp({required String phone}) async {
     try {
-      debugPrint('AuthService.resendSmsOtp: phone=$phone');
+      debugPrint('AuthService.resendSmsOtp: phone=${maskContact(phone)}');
       await _client.auth.signInWithOtp(phone: phone);
     } on SocketException catch (e, st) {
       _logNetworkError('resendSmsOtp', e, st);
@@ -152,7 +152,7 @@ class AuthService {
   }) async {
     try {
       debugPrint(
-        'AuthService.sendPasswordResetOtp: email=$email, redirectTo=$redirectTo',
+        'AuthService.sendPasswordResetOtp: email=${maskContact(email)}, redirectTo=$redirectTo',
       );
       await _client.auth.resetPasswordForEmail(email, redirectTo: redirectTo);
     } on SocketException catch (e, st) {

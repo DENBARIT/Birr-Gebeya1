@@ -1,0 +1,12 @@
+-- Security fix: migration 001's "own profile update" RLS policy lets a
+-- signed-in user update every column on their own row, including
+-- `is_admin` (added by migration 002). Since admin-dashboard access is
+-- gated purely on profiles.is_admin, any authenticated mobile user could
+-- call `supabase.from('profiles').update({is_admin: true}).eq('id', myUid)`
+-- directly with the anon key and grant themselves admin access — RLS alone
+-- doesn't stop it because the policy only checks *which row* (auth.uid() =
+-- id), not *which column*. Migration 004 already closed this same class of
+-- hole for csd_account_number/csd_account_status; this closes it for
+-- is_admin too, the same way: a column-level REVOKE regardless of RLS. The
+-- admin-dashboard's service_role client is unaffected, same as 004.
+REVOKE UPDATE (is_admin) ON public.profiles FROM authenticated;

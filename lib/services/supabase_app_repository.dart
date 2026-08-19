@@ -46,6 +46,8 @@ class SupabaseAppRepository {
     String? telebirrNumber,
     String? nationalId,
     String? region,
+    String? gender,
+    DateTime? dateOfBirth,
     String? email,
     String? phoneNumber,
   }) async {
@@ -59,6 +61,8 @@ class SupabaseAppRepository {
       'telebirr_number': telebirrNumber,
       'national_id': nationalId,
       'region': region,
+      'gender': gender,
+      'date_of_birth': dateOfBirth?.toIso8601String().split('T').first,
       'email': email,
       'phone_number': phoneNumber,
     }..removeWhere((k, v) => v == null);
@@ -69,5 +73,47 @@ class SupabaseAppRepository {
     } catch (_) {
       return false;
     }
+  }
+
+  /// Creates an order the broker dashboard will see and verify against the
+  /// SMS the broker receives — see
+  /// birr_gebeya/migrations/004_broker_dashboard.sql. RLS lets a signed-in
+  /// user insert only their own order row.
+  Future<bool> createOrder({
+    required String poolId,
+    required String assetName,
+    required double amount,
+    required String csdAccountNumber,
+    required String userFullName,
+  }) async {
+    final user = _client.auth.currentUser;
+    if (user == null) return false;
+
+    try {
+      await _client.from('orders').insert({
+        'user_id': user.id,
+        'pool_id': poolId,
+        'asset_name': assetName,
+        'amount': amount,
+        'csd_account_number': csdAccountNumber,
+        'user_full_name': userFullName,
+      });
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Fetches notifications visible to the signed-in user: admin broadcasts
+  /// (target_user_id IS NULL) plus anything addressed to them specifically.
+  /// Row Level Security enforces that filter server-side — see
+  /// migrations/003_create_notifications.sql — so no extra `.eq()` is needed
+  /// here; an unauthenticated caller simply gets an empty list.
+  Future<List<Map<String, dynamic>>> fetchNotifications() async {
+    final resp = await _client
+        .from('notifications')
+        .select()
+        .order('created_at', ascending: false);
+    return List<Map<String, dynamic>>.from(resp as List);
   }
 }

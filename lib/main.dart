@@ -17,7 +17,7 @@ Future<void> main() async {
       dotenv.env['SUPABASE_ANON_KEY'] ?? dotenv.env['SUPABASE_KEY'];
 
   // Debug: print which env vars were loaded (mask sensitive values).
-  debugPrint('Loaded .env keys: ' + dotenv.env.keys.join(', '));
+  debugPrint('Loaded .env keys: ${dotenv.env.keys.join(', ')}');
   debugPrint('SUPABASE_URL: ${supabaseUrl ?? "<missing>"}');
   debugPrint(
     'SUPABASE_ANON_KEY present: ${dotenv.env['SUPABASE_ANON_KEY'] != null}',

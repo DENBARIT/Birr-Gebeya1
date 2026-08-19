@@ -265,7 +265,7 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                   ),
                   const SizedBox(height: 8.0),
                   DropdownButtonFormField<String>(
-                    value: _selectedGender,
+                    initialValue: _selectedGender,
                     items: const [
                       DropdownMenuItem(value: 'Female', child: Text('Female')),
                       DropdownMenuItem(value: 'Male', child: Text('Male')),
@@ -337,7 +337,7 @@ class _KycProfileSetupScreenState extends State<KycProfileSetupScreen> {
                   ),
                   const SizedBox(height: 8.0),
                   DropdownButtonFormField<String>(
-                    value: _selectedRegion,
+                    initialValue: _selectedRegion,
                     isExpanded: true,
                     items: _ethiopianRegions
                         .map((r) => DropdownMenuItem(value: r, child: Text(r)))
